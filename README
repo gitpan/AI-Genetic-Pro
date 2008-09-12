@@ -1,0 +1,113 @@
+NAME
+    AI::Genetic::Pro - Efficient genetic algorithms for professional purpose
+
+SYNOPSIS
+        use AI::Genetic::Pro;
+        
+    sub fitness {
+            my ($ga, $chromosome) = @_;
+            return oct('0b' . $ga->as_string($chromosome)); 
+        }
+        
+    sub terminate {
+            my ($ga) = @_;
+            my $result = oct('0b' . $ga->as_string($ga->getFittest));
+            return $result == 4294967295 ? 1 : 0;
+        }
+        
+    my $ga = AI::Genetic::Pro->new(        
+            -fitness        => \&fitness,        # fitness function
+            -terminate      => \&terminate,      # terminate function
+            -type           => 'bitvector',      # type of individuals
+            -population     => 1000,             # population
+            -crossover      => 0.9,              # probab. of crossover
+            -mutation       => 0.01,             # probab. of mutation
+            -parents        => 2,                # number  of parents
+            -selection      => [ 'Roulette' ],   # selection strategy
+            -strategy       => [ 'Points', 2 ],  # crossover strategy
+            -cache          => 0,                # cache results
+            -history        => 1,                # remember best results
+        );
+            
+    # init population of 32-bit vectors
+        $ga->init(32);
+            
+    # evolve 10 generations
+        $ga->evolve(10);
+        
+    # best score
+        print "SCORE: ", oct('0b' . $ga->as_string($ga->getFittest)), ".\n";
+
+DESCRIPTION
+    This module provides efficient implementation of a genetic algorithm for
+    professional purpose. It was designed to operate as fast as possible
+    even on very large populations and big individuals. "AI::Genetic::Pro"
+    was inspired by "AI::Genetic", so it is in most cases compatible (there
+    is some changes). Additionaly "AI::Genetic::Pro" doesn't have
+    limitations of its ancestor (ie. seriously slow down in case of big
+    populations ( >10000 ) or vectors with size > 33 fields).
+
+    *   To provide more flexibility "AI::Genetic::Pro" supports many
+        statistic distributions, such as: "uniform", "natural", "chi_square"
+        and others.
+
+    *   To increase speed XS code are used, however with portability in
+        mind. This distribution was tested on Windows and Linux platforms
+        (should work on any other).
+
+    *   This module was designed to use as little memory as possible.
+        Population of size 10000 consist 92-bit vectors uses only ~24MB (in
+        "AI::Genetic" something about ~78MB!!!).
+
+METHODS
+    new( { param => value, param0 => value0 } )
+        Constructor.
+
+    population($population)
+        Set/get population.
+
+    type($type)
+        Set/get type of individuals. Currently it can be set to:
+
+        bitvector,
+        listvector,
+        rangevector,
+        combination.
+
+    init()
+    evolve()
+    getFittest()
+    generation()
+    history()
+
+DOCUMENTATION
+    At the moment for more information see documentation of AI::Genetic. It
+    is compatible in most cases.
+
+SUPPORT
+    "AI::Genetic::Pro" is still under development and it has very poor
+    documentation. However it is used in many production environments.
+
+TODO
+    More documentation.
+    More tests.
+    Warnings.
+
+REPORTING BUGS
+    When reporting bugs/problems please include as much information as
+    possible. It may be difficult for me to reproduce the problem as almost
+    every setup is different.
+
+    A small script which yields the problem will probably be of help.
+
+AUTHOR
+    Strzelecki Łukasz <strzelec@rswsystems.com>
+
+SEE ALSO
+    AI::Genetic
+
+COPYRIGHT
+    Copyright (c) Strzelecki Łukasz. All rights reserved. This program is
+    free software; you can redistribute it and/or modify it under the same
+    terms as Perl itself.
+
