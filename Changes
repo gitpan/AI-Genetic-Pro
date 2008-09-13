@@ -1,4 +1,11 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
-0.1   Sat, 13 Sep 2008 02:04:25 +0200
+0.15	Sun, 14 Sep 2008 02:14:02 +0200
+	- Increased speed :-)
+	- Changes way of mutation is made.
+	- Added charts.
+	- Added possibility to save/load GA.
+	- More documentation.
+
+0.1		Sat, 13 Sep 2008 02:04:25 +0200
 	- First release.

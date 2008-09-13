@@ -15,7 +15,9 @@ WriteMakefile(
 		'Clone'						=> 0,
 		'Math::Random'				=> 0,
 		'Perl6::Say'				=> 0,
-		'Digest::MD4'				=> 0,
+		'Digest::MD5'				=> 0,
 		'Class::Accessor::Fast'		=> 0,
+		'Storable'					=> 2.05,
+		'GD::Graph::linespoints'	=> 0,
     },
 );

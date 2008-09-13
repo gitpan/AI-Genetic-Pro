@@ -1,5 +1,6 @@
 NAME
-    AI::Genetic::Pro - Efficient genetic algorithms for professional purpose
+    AI::Genetic::Pro - Efficient genetic algorithms for professional
+    purpose.
 
 SYNOPSIS
         use AI::Genetic::Pro;
@@ -36,14 +37,17 @@ SYNOPSIS
         $ga->evolve(10);
         
     # best score
-        print "SCORE: ", oct('0b' . $ga->as_string($ga->getFittest)), ".\n";
+        print "SCORE: ", $ga->as_value($ga->getFittest), ".\n";
+        
+    # save evolution path as a chart
+        $ga->chart(-filename => 'evolution.png');
 
 DESCRIPTION
     This module provides efficient implementation of a genetic algorithm for
-    professional purpose. It was designed to operate as fast as possible
+    a professional purpose. It was designed to operate as fast as possible
     even on very large populations and big individuals. "AI::Genetic::Pro"
     was inspired by "AI::Genetic", so it is in most cases compatible (there
-    is some changes). Additionaly "AI::Genetic::Pro" doesn't have
+    are some changes). Additionaly "AI::Genetic::Pro" doesn't have
     limitations of its ancestor (ie. seriously slow down in case of big
     populations ( >10000 ) or vectors with size > 33 fields).
 
@@ -60,13 +64,13 @@ DESCRIPTION
         "AI::Genetic" something about ~78MB!!!).
 
 METHODS
-    new( { param => value, param0 => value0 } )
+    "new( { param =" value, param0 => value0 } )>
         Constructor.
 
-    population($population)
+    "population($population)"
         Set/get population.
 
-    type($type)
+    "type($type)"
         Set/get type of individuals. Currently it can be set to:
 
         bitvector,
@@ -74,11 +78,52 @@ METHODS
         rangevector,
         combination.
 
-    init()
-    evolve()
-    getFittest()
-    generation()
-    history()
+    "parents($parents)"
+        Set/get number of parents in *Roulette* crossover.
+
+    "init()"
+    "evolve()"
+    "history()"
+    "getAvgFitness()"
+    "getFittest()"
+    "getHistory()"
+    "generation()"
+    "chart(%options)"
+        Generate a chart describing changes of min, mean, max scores in Your
+        population. To satisfy Your needs, You can pass following options:
+
+        *-filename* - file to save in chart (obligatory),
+        *-title* - title of a chart (default: *Evolution*),
+        *-x_label* - X label (default: *Generations*),
+        *-y_label* - Y label (default: *Value*),
+        *-format* - format of values, like "sprintf" (default: '%.2f'),
+        *-legend1* - description of min line (default: *Min value*),
+        *-legend2* - description of min line (default: *Mean value*),
+        *-legend3* - description of min line (default: *Max value*),
+        *-font* - path to font in (*.ttf format) to be used (default: none),
+        *-logo* - path to logo (png/jpg image) to embed in a chart,
+        *-width* - width of a chart,
+        *-height* - height of a chart,
+
+        In example:
+
+                $ga->chart(-width => 480, height => 320, -filename => 'chart.png');
+
+    "save($file)"
+        Save current state of the genetic algorithm to a specified file.
+
+    "load($file)"
+        Load a state of the genetic algorithm from a specified file.
+
+    "as_array($chromosome)"
+        Return an array representing specified chromosome.
+
+    "as_value($chromosome)"
+        Return score of specified chromosome. Value of *chromosome* is
+        calculated by fitness function.
+
+    "as_string($chromosome)"
+        Return string-representation of specified chromosome.
 
 DOCUMENTATION
     At the moment for more information see documentation of AI::Genetic. It
