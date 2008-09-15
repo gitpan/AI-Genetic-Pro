@@ -3,7 +3,6 @@ package AI::Genetic::Pro::Mutation::Combination;
 use warnings;
 use strict;
 use List::MoreUtils qw(first_index);
-#use feature 'say';
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }

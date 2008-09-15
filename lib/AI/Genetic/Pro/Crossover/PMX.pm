@@ -5,7 +5,6 @@ use strict;
 use Clone qw( clone );
 use List::MoreUtils qw(first_index);
 use Data::Dumper; $Data::Dumper::Sortkeys = 1;
-use feature 'say';
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }
 #=======================================================================
@@ -41,7 +40,7 @@ sub run {
 					#}
 					
 					my @bv = splice @$b, $points[0], $points[1] - $points[0], @av;
-					say "@av | @bv";
+					
 					for my $idx(0..$#av){
 						$a->[ first_index { $_ == $bv[$idx] } @$a ] = $av[$idx];
 						$b->[ first_index { $_ == $av[$idx] } @$b ] = $bv[$idx];

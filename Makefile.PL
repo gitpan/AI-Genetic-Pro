@@ -14,7 +14,6 @@ WriteMakefile(
 		'List::MoreUtils'			=> 0,
 		'Clone'						=> 0,
 		'Math::Random'				=> 0,
-		'Perl6::Say'				=> 0,
 		'Digest::MD5'				=> 0,
 		'Class::Accessor::Fast'		=> 0,
 		'Storable'					=> 2.05,

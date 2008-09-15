@@ -2,9 +2,8 @@ package AI::Genetic::Pro::Selection::RouletteDistribution;
 
 use warnings;
 use strict;
-use feature 'say';
 use List::MoreUtils qw(first_index);
-use Data::Dumper; $Data::Dumper::Sortkeys = 1;
+#use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #use AI::Genetic::Pro::Array::PackTemplate;
 use Math::Random qw(
 	random_uniform

@@ -51,87 +51,147 @@ DESCRIPTION
     limitations of its ancestor (ie. seriously slow down in case of big
     populations ( >10000 ) or vectors with size > 33 fields).
 
-    *   To provide more flexibility "AI::Genetic::Pro" supports many
-        statistic distributions, such as: "uniform", "natural", "chi_square"
-        and others.
-
-    *   To increase speed XS code are used, however with portability in
+    Speed
+        To increase speed XS code are used, however with portability in
         mind. This distribution was tested on Windows and Linux platforms
         (should work on any other).
 
-    *   This module was designed to use as little memory as possible.
+    Memory
+        This module was designed to use as little memory as possible.
         Population of size 10000 consist 92-bit vectors uses only ~24MB (in
         "AI::Genetic" something about ~78MB!!!).
 
+    Advanced options
+        To provide more flexibility "AI::Genetic::Pro" supports many
+        statistic distributions, such as: "uniform", "natural", "chi_square"
+        and others. This feature can be used in selection or/and crossover.
+        See documentation below.
+
 METHODS
-    "new( { param =" value, param0 => value0 } )>
-        Constructor.
+    Simply description of available methods. See below.
 
-    "population($population)"
-        Set/get population.
+  new( %options )
+    Constructor. It accepts options in hash-value style. See options and an
+    example below.
 
-    "type($type)"
-        Set/get type of individuals. Currently it can be set to:
+   -fitness
+    This defines a *fitness* function. It expects a reference to a
+    subroutine.
 
-        bitvector,
-        listvector,
-        rangevector,
-        combination.
+   -terminate
+    This defines a *terminate* function. It expects a reference to a
+    subroutine.
 
-    "parents($parents)"
-        Set/get number of parents in *Roulette* crossover.
+   -type
+    This defines the type of chromosomes. Currently, "AI::Genetic::Pro"
+    supports four types:
 
-    "init()"
-    "evolve()"
-    "history()"
-    "getAvgFitness()"
-    "getFittest()"
-    "getHistory()"
-    "generation()"
-    "chart(%options)"
-        Generate a chart describing changes of min, mean, max scores in Your
-        population. To satisfy Your needs, You can pass following options:
+   bitvector
+   listvector
+   rangevector
+   combination
+   -population
+    This defines the size of the population, i.e. how many individuals to
+    simultaneously exist at each generation.
 
-        *-filename* - file to save in chart (obligatory),
-        *-title* - title of a chart (default: *Evolution*),
-        *-x_label* - X label (default: *Generations*),
-        *-y_label* - Y label (default: *Value*),
-        *-format* - format of values, like "sprintf" (default: '%.2f'),
-        *-legend1* - description of min line (default: *Min value*),
-        *-legend2* - description of min line (default: *Mean value*),
-        *-legend3* - description of min line (default: *Max value*),
-        *-font* - path to font in (*.ttf format) to be used (default: none),
-        *-logo* - path to logo (png/jpg image) to embed in a chart,
-        *-width* - width of a chart,
-        *-height* - height of a chart,
+   -crossover
+    This defines the crossover rate. Fairest results are achieved with
+    crossover rate ~0.95.
 
-        In example:
+   -mutation
+   -parents
+   -selection
+   -strategy
+   -cache
+   -history
+  population($population)
+    Set/get population.
 
-                $ga->chart(-width => 480, height => 320, -filename => 'chart.png');
+  type($type)
+    Set/get type of individuals. Currently it can be set to:
 
-    "save($file)"
-        Save current state of the genetic algorithm to a specified file.
+    "bitvector",
+    "listvector",
+    "rangevector",
+    "combination".
 
-    "load($file)"
-        Load a state of the genetic algorithm from a specified file.
+  parents($parents)
+    Set/get number of parents in *Roulette* crossover.
 
-    "as_array($chromosome)"
-        Return an array representing specified chromosome.
+  init()
+  evolve()
+  history()
+  getAvgFitness()
+  getFittest()
+  getHistory()
+  generation()
+  chart(%options)
+    Generate a chart describing changes of min, mean, max scores in Your
+    population. To satisfy Your needs, You can pass following options:
 
-    "as_value($chromosome)"
-        Return score of specified chromosome. Value of *chromosome* is
-        calculated by fitness function.
+   -filename
+    File to save a chart in (obligatory).
 
-    "as_string($chromosome)"
-        Return string-representation of specified chromosome.
+   -title
+    Title of a chart (default: *Evolution*).
+
+   -x_label
+    X label (default: *Generations*).
+
+   -y_label
+    Y label (default: *Value*).
+
+   -format
+    Format of values, like "sprintf" (default: *'%.2f'*).
+
+   -legend1
+    Description of min line (default: *Min value*).
+
+   -legend2
+    Description of min line (default: *Mean value*).
+
+   -legend3
+    Description of min line (default: *Max value*).
+
+   -width
+    Width of a chart (default: *640*).
+
+   -height
+    Height of a chart (default: *480*).
+
+   -font
+    Path to font in (*.ttf format) to be used (default: none).
+
+   -logo
+    Path to logo (png/jpg image) to embed in a chart (default: none).
+
+   In example:
+            $ga->chart(-width => 480, height => 320, -filename => 'chart.png');
+
+  save($file)
+    Save current state of the genetic algorithm to a specified file.
+
+  load($file)
+    Load a state of the genetic algorithm from a specified file.
+
+  as_array($chromosome)
+    Return an array representing specified chromosome.
+
+  as_value($chromosome)
+    Return score of specified chromosome. Value of *chromosome* is
+    calculated by fitness function.
+
+  as_string($chromosome)
+    Return string-representation of specified chromosome.
 
 DOCUMENTATION
     At the moment for more information see documentation of AI::Genetic. It
     is compatible in most cases.
 
 SUPPORT
-    "AI::Genetic::Pro" is still under development and it has very poor
-    documentation. However it is used in many production environments.
+    "AI::Genetic::Pro" is still under development and it has poor
+    documentation (for now). However it is used in many production
+    environments.
 
 TODO
     More documentation.

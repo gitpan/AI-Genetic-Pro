@@ -3,9 +3,7 @@ package AI::Genetic::Pro::Crossover::Distribution;
 use warnings;
 use strict;
 use Clone qw( clone );
-use feature 'say';
-use Data::Dumper; $Data::Dumper::Sortkeys = 1;
-#use AI::Genetic::Pro::Array::PackTemplate;
+#use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use Math::Random qw(
 	random_uniform_integer 
 	random_normal 

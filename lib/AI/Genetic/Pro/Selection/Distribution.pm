@@ -2,8 +2,7 @@ package AI::Genetic::Pro::Selection::Distribution;
 
 use warnings;
 use strict;
-use feature 'say';
-use Data::Dumper; $Data::Dumper::Sortkeys = 1;
+#use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #use AI::Genetic::Pro::Array::PackTemplate;
 use Math::Random qw(
 	random_uniform_integer 

@@ -2,17 +2,16 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.15;
+$VERSION = 0.16;
 #---------------
 
 use warnings;
 use strict;
-use feature 'say';
 use lib qw(../lib/perl);
 use Carp;
 use List::Util qw(sum);
 use List::MoreUtils qw(minmax first_index);
-use Data::Dumper; $Data::Dumper::Sortkeys = 1;
+#use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use UNIVERSAL::require;
 use AI::Genetic::Pro::Array::Type qw(get_package_by_element_size);
 use AI::Genetic::Pro::Chromosome;
@@ -76,7 +75,7 @@ sub init {
 	#-------------------------------------------------------------------
 	$self->_generation(0);
 	$self->_fitness( { } );
-	$self->_history( [ ] );
+	$self->_history( [  [ ], [ ], [ ] ] );
 	$self->_init_cache if $self->cache;
 	#-------------------------------------------------------------------
 	
@@ -168,14 +167,8 @@ sub chart {
 
 	my $graph = GD()->new(($params{-width} || 640), ($params{-height} || 480));
 
-	my @data = ( [ ], [ ], [ ], [ ] );
-	for(0..$#{$self->getHistory}){
-		push @{$data[0]}, $_;
-		push @{$data[1]}, $self->getHistory->[$_]->[2];
-		push @{$data[2]}, $self->getHistory->[$_]->[1];
-		push @{$data[3]}, $self->getHistory->[$_]->[0];
-	}
-	
+	my $data = $self->getHistory;
+
 	if(defined $params{-font}){
     	$graph->set_title_font  ($params{-font}, 12);
     	$graph->set_x_label_font($params{-font}, 10);
@@ -190,7 +183,7 @@ sub chart {
     );
 
     $graph->set(
-        x_label_skip        => int(($data[0]->[-1]*4)/100),
+        x_label_skip        => int(($data->[0]->[-1]*4)/100),
         x_labels_vertical   => 1,
         x_label_position    => .5,
         y_label_position    => .5,
@@ -223,7 +216,7 @@ sub chart {
     );
 	
 	
-    my $gd = $graph->plot( \@data ) or croak($@);
+    my $gd = $graph->plot( [ [ 0..$#{$data->[0]} ], @$data ] ) or croak($@);
     open(my $fh, '>', $params{-filename}) or croak($@);
     binmode $fh;
     print $fh $gd->png;
@@ -334,6 +327,17 @@ sub _mutation {
 	return $self->_mutator->run($self);
 }
 #=======================================================================
+sub _save_history {
+	my @tmp;
+	if($_[0]->history){ @tmp = $_[0]->getAvgFitness; }
+	else { @tmp = (undef, undef, undef); }
+	
+	push @{$_[0]->_history->[0]}, $tmp[0]; 
+	push @{$_[0]->_history->[1]}, $tmp[1];
+	push @{$_[0]->_history->[2]}, $tmp[2];
+	return 1;
+}
+#=======================================================================
 sub evolve {
 	my ($self, $generations) = @_;
 	
@@ -345,7 +349,7 @@ sub evolve {
 		# update generation --------------------------------------------
 		$self->_generation($self->_generation + 1);
 		# update history -----------------------------------------------
-		push @{$self->_history}, [ $self->getAvgFitness ] if $self->history;
+		$self->_save_history;
 		# selection ----------------------------------------------------
 		$self->_select_parents();
 		# crossover ----------------------------------------------------
@@ -376,7 +380,7 @@ sub getAvgFitness {
 	
 	my @minmax = minmax values %{$self->_fitness};
 	my $mean = sum(values %{$self->_fitness}) / scalar values %{$self->_fitness};
-	return $minmax[0], int($mean), $minmax[1];
+	return $minmax[1], int($mean), $minmax[0];
 }
 #=======================================================================
 1;
@@ -404,12 +408,12 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
     }
     
     my $ga = AI::Genetic::Pro->new(        
-        -fitness    	=> \&fitness,        # fitness function
-        -terminate  	=> \&terminate,      # terminate function
+        -fitness        => \&fitness,        # fitness function
+        -terminate      => \&terminate,      # terminate function
         -type           => 'bitvector',      # type of individuals
-        -population 	=> 1000,             # population
-        -crossover  	=> 0.9,              # probab. of crossover
-        -mutation   	=> 0.01,             # probab. of mutation
+        -population     => 1000,             # population
+        -crossover      => 0.9,              # probab. of crossover
+        -mutation       => 0.01,             # probab. of mutation
         -parents        => 2,                # number  of parents
         -selection      => [ 'Roulette' ],   # selection strategy
         -strategy       => [ 'Points', 2 ],  # crossover strategy
@@ -428,7 +432,8 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
     
     # save evolution path as a chart
     $ga->chart(-filename => 'evolution.png');
-    
+
+
 =head1 DESCRIPTION
 
 This module provides efficient implementation of a genetic algorithm for
@@ -441,132 +446,194 @@ populations ( >10000 ) or vectors with size > 33 fields).
 
 =over 4
 
-=item 
-
-To provide more flexibility C<AI::Genetic::Pro> supports many 
-statistic distributions, such as: C<uniform>, C<natural>, C<chi_square>
-and others.
-
-=item 
+=item Speed
 
 To increase speed XS code are used, however with portability in 
 mind. This distribution was tested on Windows and Linux platforms 
 (should work on any other).
 
-=item 
+=item Memory
 
 This module was designed to use as little memory as possible. Population
 of size 10000 consist 92-bit vectors uses only ~24MB (in C<AI::Genetic> 
 something about ~78MB!!!).
-	
+
+=item Advanced options
+
+To provide more flexibility C<AI::Genetic::Pro> supports many 
+statistic distributions, such as: C<uniform>, C<natural>, C<chi_square>
+and others. This feature can be used in selection or/and crossover. See
+documentation below.
+
 =back
 
 
 =head1 METHODS
 
-=over 4
+Simply description of available methods. See below.
 
-=item C<new( { param => value, param0 => value0 } )>
+=head2 new( %options )
 
-Constructor.
+Constructor. It accepts options in hash-value style. See options and 
+an example below.
 
-=item C<population($population)>
+=head3 -fitness
+
+This defines a I<fitness> function. It expects a reference to a subroutine.
+
+=head3 -terminate 
+
+This defines a I<terminate> function. It expects a reference to a subroutine.
+
+=head3 -type
+
+This defines the type of chromosomes. Currently, C<AI::Genetic::Pro> supports four types:
+
+=head4 bitvector
+
+=head4 listvector
+
+=head4 rangevector
+
+=head4 combination
+
+=head3 -population
+
+This defines the size of the population, i.e. how many individuals to simultaneously exist at each generation.
+
+=head3 -crossover 
+
+This defines the crossover rate. Fairest results are achieved with crossover rate ~0.95.
+
+=head3 -mutation 
+
+=head3 -parents  
+
+=head3 -selection
+
+=head3 -strategy 
+
+=head3 -cache    
+
+=head3 -history 
+
+
+=head2 population($population)
 
 Set/get population.
 
-=item C<type($type)>
+=head2 type($type)
 
 Set/get type of individuals. Currently it can be set to:
 
 =over 4
 
-=item bitvector,
+=item C<bitvector>,
 
-=item listvector,
+=item C<listvector>,
 
-=item rangevector,
+=item C<rangevector>,
 
-=item combination.
+=item C<combination>.
 
 =back
 
-=item C<parents($parents)>
+=head2 parents($parents)
 
 Set/get number of parents in I<Roulette> crossover.
 
-=item C<init()>
+=head2 init()
 
-=item C<evolve()>
+=head2 evolve()
 
-=item C<history()>
+=head2 history()
 
-=item C<getAvgFitness()>
+=head2 getAvgFitness()
 
-=item C<getFittest()>
+=head2 getFittest()
 
-=item C<getHistory()>
+=head2 getHistory()
 
-=item C<generation()>
+=head2 generation()
 
-=item C<chart(%options)>
+=head2 chart(%options)
 
 Generate a chart describing changes of min, mean, max scores in Your
 population. To satisfy Your needs, You can pass following options:
 
-=over 8
+=head3 -filename
 
-=item I<-filename> - file to save in chart (obligatory),
+File to save a chart in (B<obligatory>).
 
-=item I<-title> - title of a chart (default: I<Evolution>),
+=head3 -title
 
-=item I<-x_label> - X label (default: I<Generations>),
+Title of a chart (default: I<Evolution>).
 
-=item I<-y_label> - Y label (default: I<Value>),
+=head3 -x_label
 
-=item I<-format> - format of values, like C<sprintf> (default: C<'%.2f'>),
+X label (default: I<Generations>).
 
-=item I<-legend1> - description of min line (default: I<Min value>),
+=head3 -y_label
 
-=item I<-legend2> - description of min line (default: I<Mean value>),
+Y label (default: I<Value>).
 
-=item I<-legend3> - description of min line (default: I<Max value>),
+=head3 -format
 
-=item I<-font> - path to font in (*.ttf format) to be used (default: none),
+Format of values, like C<sprintf> (default: I<'%.2f'>).
 
-=item I<-logo> - path to logo (png/jpg image) to embed in a chart,
+=head3 -legend1
 
-=item I<-width> - width of a chart,
+Description of min line (default: I<Min value>).
 
-=item I<-height> - height of a chart,  
+=head3 -legend2
 
-=back
+Description of min line (default: I<Mean value>).
 
-In example:
+=head3 -legend3
+
+Description of min line (default: I<Max value>).
+
+=head3 -width
+
+Width of a chart (default: I<640>).
+
+=head3 -height
+
+Height of a chart (default: I<480>).
+
+=head3 -font
+
+Path to font in (*.ttf format) to be used (default: none).
+
+=head3 -logo
+
+Path to logo (png/jpg image) to embed in a chart (default: none).
+
+=head3 In example:
 
 	$ga->chart(-width => 480, height => 320, -filename => 'chart.png');
 
-=item C<save($file)>
+=head2 save($file)
 
 Save current state of the genetic algorithm to a specified file.
 
-=item C<load($file)>
+=head2 load($file)
 
 Load a state of the genetic algorithm from a specified file. 
 
-=item C<as_array($chromosome)>
+=head2 as_array($chromosome)
 
 Return an array representing specified chromosome.
 
-=item C<as_value($chromosome)>
+=head2 as_value($chromosome)
 
 Return score of specified chromosome. Value of I<chromosome> is 
 calculated by fitness function.
 
-=item C<as_string($chromosome)>
+=head2 as_string($chromosome)
 
 Return string-representation of specified chromosome. 
 
-=back
 
 =head1 DOCUMENTATION
 
@@ -575,8 +642,8 @@ It is compatible in most cases.
 
 =head1 SUPPORT
 
-C<AI::Genetic::Pro> is still under development and it has very poor 
-documentation. However it is used in many production environments.
+C<AI::Genetic::Pro> is still under development and it has poor 
+documentation (for now). However it is used in many production environments.
 
 =head1 TODO
 

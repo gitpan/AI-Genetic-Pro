@@ -2,7 +2,6 @@ package AI::Genetic::Pro::Mutation::Bitvector;
 
 use warnings;
 use strict;
-#use feature 'say';
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }

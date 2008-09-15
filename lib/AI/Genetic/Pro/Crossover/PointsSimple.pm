@@ -3,7 +3,6 @@ package AI::Genetic::Pro::Crossover::PointsSimple;
 use warnings;
 use strict;
 use Clone qw( clone );
-#use feature 'say';
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #=======================================================================
 sub new { bless { points => $_[1] ? $_[1] : 1 }, $_[0]; }

@@ -2,8 +2,7 @@ package AI::Genetic::Pro::Selection::RouletteBasic;
 
 use warnings;
 use strict;
-use feature 'say';
-use Data::Dumper; $Data::Dumper::Sortkeys = 1;
+#use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use List::MoreUtils qw(first_index);
 #use AI::Genetic::Pro::Array::PackTemplate;
 #=======================================================================

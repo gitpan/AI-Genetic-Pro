@@ -2,7 +2,6 @@ package AI::Genetic::Pro::Selection::Roulette;
 
 use warnings;
 use strict;
-#use feature 'say';
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use List::Util qw(sum);
 use List::MoreUtils qw(first_index);
