@@ -4,7 +4,6 @@ use warnings;
 use strict;
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use List::MoreUtils qw(first_index);
-#use AI::Genetic::Pro::Array::PackTemplate;
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }
 #=======================================================================

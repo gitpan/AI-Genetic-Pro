@@ -19,7 +19,8 @@ sub run {
 		
 		unless(scalar @elders){
 			$_fitness->{scalar(@children)} = $fitness->($ga, $chromosomes->[$elders[0]]);
-			push @children, clone($chromosomes->[$elders[0]]);
+			#push @children, clone($chromosomes->[$elders[0]]);
+			push @children, $chromosomes->[$elders[0]];
 			next;
 		}
 		

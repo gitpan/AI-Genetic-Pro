@@ -19,7 +19,7 @@ SYNOPSIS
     my $ga = AI::Genetic::Pro->new(        
             -fitness        => \&fitness,        # fitness function
             -terminate      => \&terminate,      # terminate function
-            -type           => 'bitvector',      # type of individuals
+            -type           => 'bitvector',      # type of individuals/chromosomes
             -population     => 1000,             # population
             -crossover      => 0.9,              # probab. of crossover
             -mutation       => 0.01,             # probab. of mutation
@@ -41,15 +41,24 @@ SYNOPSIS
         
     # save evolution path as a chart
         $ga->chart(-filename => 'evolution.png');
+         
+    # save state of GA
+        $ga->save('genetic.sga');
+        
+    # load state of GA
+        $ga->load('genetic.sga');
 
 DESCRIPTION
     This module provides efficient implementation of a genetic algorithm for
     a professional purpose. It was designed to operate as fast as possible
-    even on very large populations and big individuals. "AI::Genetic::Pro"
-    was inspired by "AI::Genetic", so it is in most cases compatible (there
-    are some changes). Additionaly "AI::Genetic::Pro" doesn't have
-    limitations of its ancestor (ie. seriously slow down in case of big
-    populations ( >10000 ) or vectors with size > 33 fields).
+    even on very large populations and big individuals/chromosomes.
+    "AI::Genetic::Pro" was inspired by "AI::Genetic", so it is in most cases
+    compatible (there are some changes). Additionaly "AI::Genetic::Pro"
+    isn't pure Perl solution, so it doesn't have limitations of its ancestor
+    (ie. seriously slow down in case of big populations ( >10000 ) or
+    vectors with size > 33 fields).
+
+    If You are looking for pure Perl solution, consider AI::Genetic.
 
     Speed
         To increase speed XS code are used, however with portability in
@@ -70,123 +79,486 @@ DESCRIPTION
 METHODS
     Simply description of available methods. See below.
 
-  new( %options )
-    Constructor. It accepts options in hash-value style. See options and an
-    example below.
+    *$ga*->new( %options )
+        Constructor. It accepts options in hash-value style. See options and
+        an example below.
 
-   -fitness
-    This defines a *fitness* function. It expects a reference to a
-    subroutine.
+        -fitness
+                This defines a *fitness* function. It expects a reference to
+                a subroutine.
 
-   -terminate
-    This defines a *terminate* function. It expects a reference to a
-    subroutine.
+        -terminate
+                This defines a *terminate* function. It expects a reference
+                to a subroutine.
 
-   -type
-    This defines the type of chromosomes. Currently, "AI::Genetic::Pro"
-    supports four types:
+        -type   This defines the type of chromosomes. Currently,
+                "AI::Genetic::Pro" supports four types:
 
-   bitvector
-   listvector
-   rangevector
-   combination
-   -population
-    This defines the size of the population, i.e. how many individuals to
-    simultaneously exist at each generation.
+                bitvector   Individuals/chromosomes of this type have genes
+                            that are bits. Each gene can be in one of two
+                            possible states, on or off.
 
-   -crossover
-    This defines the crossover rate. Fairest results are achieved with
-    crossover rate ~0.95.
+                listvector  Each gene of a "listvector"
+                            individual/chromosome can assume one string
+                            value from a specified list of possible string
+                            values.
 
-   -mutation
-   -parents
-   -selection
-   -strategy
-   -cache
-   -history
-  population($population)
-    Set/get population.
+                rangevector Each gene of a "rangevector"
+                            individual/chromosome can assume one integer
+                            value from a range of possible integer values.
+                            Note that only integers are supported. The user
+                            can always transform any desired fractional
+                            values by multiplying and dividing by an
+                            appropriate power of 10.
 
-  type($type)
-    Set/get type of individuals. Currently it can be set to:
+                combination Each gene of a "combination"
+                            individual/chromosome can assume one string
+                            value from a specified list of possible string
+                            values. All genes are unique.
 
-    "bitvector",
-    "listvector",
-    "rangevector",
-    "combination".
+        -population
+                This defines the size of the population, i.e. how many
+                chromosomes to simultaneously exist at each generation.
 
-  parents($parents)
-    Set/get number of parents in *Roulette* crossover.
+        -crossover
+                This defines the crossover rate. Fairest results are
+                achieved with crossover rate ~0.95.
 
-  init()
-  evolve()
-  history()
-  getAvgFitness()
-  getFittest()
-  getHistory()
-  generation()
-  chart(%options)
-    Generate a chart describing changes of min, mean, max scores in Your
-    population. To satisfy Your needs, You can pass following options:
+        -mutation
+                This defines the mutation rate. Fairest results are achieved
+                with mutation rate ~0.01.
 
-   -filename
-    File to save a chart in (obligatory).
+        -parents
+                This defines how many parents should used in corssover.
 
-   -title
-    Title of a chart (default: *Evolution*).
+        -selection
+                This defines how individuals/chromosomes are selected to
+                crossover. It expects an array reference listed below:
 
-   -x_label
-    X label (default: *Generations*).
+                    -selection => [ $type, @params ]
 
-   -y_label
-    Y label (default: *Value*).
+                where type is one of:
 
-   -format
-    Format of values, like "sprintf" (default: *'%.2f'*).
+                RouletteBasic
+                        Each individual/chromosome can be selected with
+                        probability poportionaly to its fitness.
 
-   -legend1
-    Description of min line (default: *Min value*).
+                Roulette
+                        At the first best individuals/chromosomes are
+                        selected. From this collection parents are selected
+                        with probability poportionaly to its fitness.
 
-   -legend2
-    Description of min line (default: *Mean value*).
+                RouletteDistribution
+                        Each individual/chromosome has portion of roulette
+                        wheel proportionaly to its fitness. Selection is
+                        done with specified distribution. Supported
+                        distributions and paremeters are listed below.
 
-   -legend3
-    Description of min line (default: *Max value*).
+                        "-selection => [ 'RouletteDistribution', 'uniform'
+                        ]"
+                                    Standard uniform distribution. No
+                                    additional parameters are needed.
 
-   -width
-    Width of a chart (default: *640*).
+                        "-selection => [ 'RouletteDistribution', 'normal',
+                        $av, $sd ]"
+                                    Normal distribution, where $av is
+                                    average (default: size of population /2)
+                                    and $$sd is standard deviation (default:
+                                    size of population).
 
-   -height
-    Height of a chart (default: *480*).
+                        "-selection => [ 'RouletteDistribution', 'beta',
+                        $aa, $bb ]"
+                                    *Beta* distribution. The density of the
+                                    beta is:
 
-   -font
-    Path to font in (*.ttf format) to be used (default: none).
+                                        X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
 
-   -logo
-    Path to logo (png/jpg image) to embed in a chart (default: none).
+                                    $aa and $bb are set by default to number
+                                    of parents.
 
-   In example:
-            $ga->chart(-width => 480, height => 320, -filename => 'chart.png');
+                                    Argument restrictions: Both $aa and $bb
+                                    must not be less than 1.0E-37.
 
-  save($file)
-    Save current state of the genetic algorithm to a specified file.
+                        "-selection => [ 'RouletteDistribution', 'binomial'
+                        ]"
+                                    Binomial distribution. No additional
+                                    parameters are needed.
 
-  load($file)
-    Load a state of the genetic algorithm from a specified file.
+                        "-selection => [ 'RouletteDistribution',
+                        'chi_square', $df ]"
+                                    Chi-square distribution with $df degrees
+                                    of freedom. $df by default is set to
+                                    size of population.
 
-  as_array($chromosome)
-    Return an array representing specified chromosome.
+                        "-selection => [ 'RouletteDistribution',
+                        'exponential', $av ]"
+                                    Exponential distribution, where $av is
+                                    average . $av by default is set to size
+                                    of population.
 
-  as_value($chromosome)
-    Return score of specified chromosome. Value of *chromosome* is
-    calculated by fitness function.
+                        "-selection => [ 'RouletteDistribution', 'poisson',
+                        $mu ]"
+                                    Poisson distribution, where $mu is mean.
+                                    $mu by default is set to size of
+                                    population.
 
-  as_string($chromosome)
-    Return string-representation of specified chromosome.
+                Distribution
+                        Chromosomes/individuals are selected with specified
+                        distribution. See below.
+
+                        "-selection => [ 'Distribution', 'uniform' ]"
+                                    Standard uniform distribution. No
+                                    additional parameters are needed.
+
+                        "-selection => [ 'Distribution', 'normal', $av, $sd
+                        ]"
+                                    Normal distribution, where $av is
+                                    average (default: size of population /2)
+                                    and $$sd is standard deviation (default:
+                                    size of population).
+
+                        "-selection => [ 'Distribution', 'beta', $aa, $bb ]"
+                                    *Beta* distribution. The density of the
+                                    beta is:
+
+                                        X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
+
+                                    $aa and $bb are set by default to number
+                                    of parents.
+
+                                    Argument restrictions: Both $aa and $bb
+                                    must not be less than 1.0E-37.
+
+                        "-selection => [ 'Distribution', 'binomial' ]"
+                                    Binomial distribution. No additional
+                                    parameters are needed.
+
+                        "-selection => [ 'Distribution', 'chi_square', $df
+                        ]"
+                                    Chi-square distribution with $df degrees
+                                    of freedom. $df by default is set to
+                                    size of population.
+
+                        "-selection => [ 'Distribution', 'exponential', $av
+                        ]"
+                                    Exponential distribution, where $av is
+                                    average . $av by default is set to size
+                                    of population.
+
+                        "-selection => [ 'Distribution', 'poisson', $mu ]"
+                                    Poisson distribution, where $mu is mean.
+                                    $mu by default is set to size of
+                                    population.
+
+        -strategy
+                This defines strategy of crossover operation. It expects an
+                array reference listed below:
+
+                    -strategy => [ $type, @params ]
+
+                where type is one of:
+
+                PointsSimple
+                    Simple crossover in one or many points. Best
+                    chromosomes/individuals are selected to new generation.
+                    In example:
+
+                        -crossover => [ 'PointsSimple', $n ]
+
+                    where $n is number of points for crossing.
+
+                PointsBasic
+                    Crossover in one or many points. In basic crossover
+                    selected parents are crossed and one (random) of
+                    children is moved to new generation. In example:
+
+                        -crossover => [ 'PointsBasic', $n ]
+
+                    where $n is number of points for crossing.
+
+                Points
+                    Crossover in one or many points. In normal crossover
+                    selected parents are crossed and the best of child is
+                    moved to new generation. In example:
+
+                        -crossover => [ 'Points', $n ]
+
+                    where $n is number of points for crossing.
+
+                PointsAdvenced
+                    Crossover in one or many points. After crossover best
+                    chromosomes/individuals from all parents and chidren are
+                    selected to new generation. In example:
+
+                        -crossover => [ 'PointsAdvanced', $n ]
+
+                    where $n is number of points for crossing.
+
+                Distribution
+                    In *distribution* crossover parents are crossed in
+                    points selected with specified distribution. See below.
+
+                    "-selection => [ 'Distribution', 'uniform' ]"
+                            Standard uniform distribution. No additional
+                            parameters are needed.
+
+                    "-selection => [ 'Distribution', 'normal', $av, $sd ]"
+                            Normal distribution, where $av is average
+                            (default: size of population /2) and $$sd is
+                            standard deviation (default: size of
+                            population).
+
+                    "-selection => [ 'Distribution', 'beta', $aa, $bb ]"
+                            *Beta* distribution. The density of the beta is:
+
+                                X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
+
+                            $aa and $bb are set by default to number of
+                            parents.
+
+                            Argument restrictions: Both $aa and $bb must not
+                            be less than 1.0E-37.
+
+                    "-selection => [ 'Distribution', 'binomial' ]"
+                            Binomial distribution. No additional parameters
+                            are needed.
+
+                    "-selection => [ 'Distribution', 'chi_square', $df ]"
+                            Chi-square distribution with $df degrees of
+                            freedom. $df by default is set to size of
+                            population.
+
+                    "-selection => [ 'Distribution', 'exponential', $av ]"
+                            Exponential distribution, where $av is average .
+                            $av by default is set to size of population.
+
+                    "-selection => [ 'Distribution', 'poisson', $mu ]"
+                            Poisson distribution, where $mu is mean. $mu by
+                            default is set to size of population.
+
+                PMX PMX method defined by Goldberg and Lingle in 1985.
+                    Parameters: *none*.
+
+                OX  OX method defined by Davis (?) in 1985. Parameters:
+                    *none*.
+
+        -cache  This defines if cache should be used. Correct values are: 1
+                or 0 (default: *0*).
+
+        -history
+                This defines if history should be collected. Correct values
+                are: 1 or 0 (default: *0*).
+
+                Collect history.
+
+    *$ga*->population($population)
+        Set/get size of the population. This defines the size of the
+        population, i.e. how many chromosomes to simultaneously exist at
+        each generation.
+
+    *$ga*->indType()
+        Get type of individuals/chromosomes. Currently supported types are:
+
+        "bitvector"
+            Chromosomes will be just bitvectors. See documentation of "new"
+            method.
+
+        "listvector"
+            Chromosomes will be lists of specified values. See documentation
+            of "new" method.
+
+        "rangevector"
+            Chromosomes will be lists of values from specified range. See
+            documentation of "new" method.
+
+        "combination"
+            Chromosomes will be uniq lists of specified values. This is used
+            for example in *Traveling Salesman Problem*. See documentation
+            of "new" method.
+
+        In example:
+
+            my $type = $ga->type();
+
+    *$ga*->type()
+        Alias for "indType".
+
+    *$ga*->crossProb()
+        This method is used to query and set the crossover rate.
+
+    *$ga*->crossover()
+        Alias for "crossProb".
+
+    *$ga*->mutProb()
+        This method is used to query and set the mutation rate.
+
+    *$ga*->mutation()
+        Alias for "mutation".
+
+    *$ga*->parents($parents)
+        Set/get number of parents in a crossover.
+
+    *$ga*->init($args)
+        This method initializes the population with random
+        individuals/chromosomes. It MUST be called before any call to
+        "evolve()". It expects one argument, which depends on the type of
+        individuals/chromosomes:
+
+        bitvector
+            For bitvectors, the argument is simply the length of the
+            bitvector.
+
+                $ga->init(10);
+
+            This initializes a population where each individual/chromosome
+            has 10 genes.
+
+        listvector
+            For listvectors, the argument is an anonymous list of lists. The
+            number of sub-lists is equal to the number of genes of each
+            individual/chromosome. Each sub-list defines the possible string
+            values that the corresponding gene can assume.
+
+                $ga->init([
+                           [qw/red blue green/],
+                           [qw/big medium small/],
+                           [qw/very_fat fat fit thin very_thin/],
+                          ]);
+
+            This initializes a population where each individual/chromosome
+            has 3 genes and each gene can assume one of the given values.
+
+        rangevector
+            For rangevectors, the argument is an anonymous list of lists.
+            The number of sub-lists is equal to the number of genes of each
+            individual/chromosome. Each sub-list defines the minimum and
+            maximum integer values that the corresponding gene can assume.
+
+                $ga->init([
+                           [1, 5],
+                           [0, 20],
+                           [4, 9],
+                          ]);
+
+            This initializes a population where each individual/chromosome
+            has 3 genes and each gene can assume an integer within the
+            corresponding range.
+
+        combination
+            For combination, the argument is an anonymous list of possible
+            values of gene.
+
+                $ga->init( [ 'a', 'b', 'c' ] );
+
+            This initializes a population where each chromosome has 3 genes
+            and each gene is uniq combination of 'a', 'b' and 'c'. For
+            example genes looks something like that:
+
+                [ 'a', 'b', 'c' ]    # gene 1
+                [ 'c', 'a', 'b' ]    # gene 2
+                [ 'b', 'c', 'a' ]    # gene 3
+                # ...and so on...
+
+    *$ga*->evolve()
+        This method causes the GA to evolve the population for the specified
+        number of generations.
+
+    *$ga*->getHistory()
+        Get history of the evolution. It is in a format listed below:
+
+                [
+                        # gen0   gen1   gen2   ...          # generations
+                        [ max0,  max1,  max2,  ... ],       # max values
+                        [ mean,  mean1, mean2, ... ],       # mean values
+                        [ min0,  min1,  min2,  ... ],       # min values
+                ]
+
+    *$ga*->getAvgFitness()
+        Get *max*, *mean* and *min* score of the current generation. In
+        example:
+
+            my ($max, $mean, $min) = $ga->getAvgFitness();
+
+    *$ga*->getFittest()
+        Get fittest chromosome.
+
+    *$ga*->generation()
+        Get number of generation.
+
+    *$ga*->people()
+        Returns an anonymous list of individuals/chromosomes of the current
+        population.
+
+        IMPORTANT: the actual array reference used by the "AI::Genetic::Pro"
+        object is returned, so any changes to it will be reflected in *$ga*.
+
+    *$ga*->chromosomes()
+        Alias for "people".
+
+    *$ga*->chart(%options)
+        Generate a chart describing changes of min, mean, max scores in Your
+        population. To satisfy Your needs, You can pass following options:
+
+        -filename
+            File to save a chart in (obligatory).
+
+        -title
+            Title of a chart (default: *Evolution*).
+
+        -x_label
+            X label (default: *Generations*).
+
+        -y_label
+            Y label (default: *Value*).
+
+        -format
+            Format of values, like "sprintf" (default: *'%.2f'*).
+
+        -legend1
+            Description of min line (default: *Min value*).
+
+        -legend2
+            Description of min line (default: *Mean value*).
+
+        -legend3
+            Description of min line (default: *Max value*).
+
+        -width
+            Width of a chart (default: *640*).
+
+        -height
+            Height of a chart (default: *480*).
+
+        -font
+            Path to font in (*.ttf format) to be used (default: none).
+
+        -logo
+            Path to logo (png/jpg image) to embed in a chart (default:
+            none).
+
+        In example:
+                    $ga->chart(-width => 480, height => 320, -filename => 'chart.png');
+
+    *$ga*->save($file)
+        Save current state of the genetic algorithm to a specified file.
+
+    *$ga*->load($file)
+        Load a state of the genetic algorithm from a specified file.
+
+    *$ga*->as_array($chromosome)
+        Return an array representing specified chromosome.
+
+    *$ga*->as_value($chromosome)
+        Return score of specified chromosome. Value of *chromosome* is
+        calculated by fitness function.
+
+    *$ga*->as_string($chromosome)
+        Return string-representation of specified chromosome.
 
 DOCUMENTATION
-    At the moment for more information see documentation of AI::Genetic. It
-    is compatible in most cases.
+    This documentation is still incomplete, however it is based on POD of
+    AI::Genetic. So if You are in a trouble, try take a look to the
+    documentation of AI::Genetic.
 
 SUPPORT
     "AI::Genetic::Pro" is still under development and it has poor
@@ -194,9 +566,9 @@ SUPPORT
     environments.
 
 TODO
-    More documentation.
+    Examples.
     More tests.
-    Warnings.
+    Warnings in case of incorrect parameters.
 
 REPORTING BUGS
     When reporting bugs/problems please include as much information as
@@ -206,13 +578,13 @@ REPORTING BUGS
     A small script which yields the problem will probably be of help.
 
 AUTHOR
-    Strzelecki Łukasz <strzelec@rswsystems.com>
+    Strzelecki Lukasz <strzelec@rswsystems.com>
 
 SEE ALSO
     AI::Genetic
 
 COPYRIGHT
-    Copyright (c) Strzelecki Łukasz. All rights reserved. This program is
+    Copyright (c) Strzelecki Lukasz. All rights reserved. This program is
     free software; you can redistribute it and/or modify it under the same
     terms as Perl itself.
 

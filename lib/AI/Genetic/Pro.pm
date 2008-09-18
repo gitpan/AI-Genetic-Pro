@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.16;
+$VERSION = 0.17;
 #---------------
 
 use warnings;
@@ -17,9 +17,9 @@ use AI::Genetic::Pro::Array::Type qw(get_package_by_element_size);
 use AI::Genetic::Pro::Chromosome;
 use base qw(Class::Accessor::Fast);
 #-----------------------------------------------------------------------
-__PACKAGE__->mk_accessors(qw( 
-	type 
-	population 
+__PACKAGE__->mk_accessors(qw(
+	type
+	population
 	terminate
 	chromosomes 
 	crossover 
@@ -31,7 +31,7 @@ __PACKAGE__->mk_accessors(qw(
 	strategy 		_strategist
 	selection 		_selector 
 	_translations
-	_generation
+	generation
 ));
 #=======================================================================
 # Additional modules
@@ -73,7 +73,7 @@ sub init {
 	
 	croak q/You have to pass some data to "init"!/ unless $data;
 	#-------------------------------------------------------------------
-	$self->_generation(0);
+	$self->generation(0);
 	$self->_fitness( { } );
 	$self->_history( [  [ ], [ ], [ ] ] );
 	$self->_init_cache if $self->cache;
@@ -347,7 +347,7 @@ sub evolve {
 		# terminate ----------------------------------------------------
 		last if $self->terminate and $self->terminate->($self);
 		# update generation --------------------------------------------
-		$self->_generation($self->_generation + 1);
+		$self->generation($self->generation + 1);
 		# update history -----------------------------------------------
 		$self->_save_history;
 		# selection ----------------------------------------------------
@@ -359,11 +359,19 @@ sub evolve {
 	}
 }
 #=======================================================================
-# STATS ################################################################
+# ALIASES ##############################################################
 #=======================================================================
-sub generation { $_[0]->_generation }
+sub people { $_[0]->chromosomes() }
 #=======================================================================
 sub getHistory { $_[0]->_history()  }
+#=======================================================================
+sub mutProb { shift->mutation(@_) }
+#=======================================================================
+sub crossProb { shift->crossover(@_) }
+#=======================================================================
+sub intType { shift->type() }
+#=======================================================================
+# STATS ################################################################
 #=======================================================================
 sub getFittest {
 	my ($self, $n) = @_;
@@ -410,7 +418,7 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
     my $ga = AI::Genetic::Pro->new(        
         -fitness        => \&fitness,        # fitness function
         -terminate      => \&terminate,      # terminate function
-        -type           => 'bitvector',      # type of individuals
+        -type           => 'bitvector',      # type of individuals/chromosomes
         -population     => 1000,             # population
         -crossover      => 0.9,              # probab. of crossover
         -mutation       => 0.01,             # probab. of mutation
@@ -432,17 +440,24 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
     
     # save evolution path as a chart
     $ga->chart(-filename => 'evolution.png');
-
+     
+    # save state of GA
+    $ga->save('genetic.sga');
+    
+    # load state of GA
+    $ga->load('genetic.sga');
 
 =head1 DESCRIPTION
 
 This module provides efficient implementation of a genetic algorithm for
 a professional purpose. It was designed to operate as fast as possible
-even on very large populations and big individuals. C<AI::Genetic::Pro> 
+even on very large populations and big individuals/chromosomes. C<AI::Genetic::Pro> 
 was inspired by C<AI::Genetic>, so it is in most cases compatible 
-(there are some changes). Additionaly C<AI::Genetic::Pro> B<doesn't have>
-limitations of its ancestor (ie. seriously slow down in case of big 
+(there are some changes). Additionaly C<AI::Genetic::Pro> isn't pure Perl solution, so it 
+B<doesn't have> limitations of its ancestor (ie. seriously slow down in case of big 
 populations ( >10000 ) or vectors with size > 33 fields).
+
+If You are looking for pure Perl solution, consider L<AI::Genetic>.
 
 =over 4
 
@@ -467,178 +482,516 @@ documentation below.
 
 =back
 
-
 =head1 METHODS
 
 Simply description of available methods. See below.
 
-=head2 new( %options )
+=over 4
+
+=item I<$ga>-E<gt>B<new>( %options )
 
 Constructor. It accepts options in hash-value style. See options and 
 an example below.
 
-=head3 -fitness
+=over 8
+
+=item -fitness
 
 This defines a I<fitness> function. It expects a reference to a subroutine.
 
-=head3 -terminate 
+=item -terminate 
 
 This defines a I<terminate> function. It expects a reference to a subroutine.
 
-=head3 -type
+=item -type
 
 This defines the type of chromosomes. Currently, C<AI::Genetic::Pro> supports four types:
 
-=head4 bitvector
+=over 12
 
-=head4 listvector
+=item bitvector
 
-=head4 rangevector
+Individuals/chromosomes of this type have genes that are bits. Each gene can be in one of two possible states, on or off.
 
-=head4 combination
+=item listvector
 
-=head3 -population
+Each gene of a "listvector" individual/chromosome can assume one string value from a specified list of possible string values.
 
-This defines the size of the population, i.e. how many individuals to simultaneously exist at each generation.
+=item rangevector
 
-=head3 -crossover 
+Each gene of a "rangevector" individual/chromosome can assume one integer value from a range of possible integer values. Note that only integers are supported. The user can always transform any desired fractional values by multiplying and dividing by an appropriate power of 10.
 
-This defines the crossover rate. Fairest results are achieved with crossover rate ~0.95.
+=item combination
 
-=head3 -mutation 
-
-=head3 -parents  
-
-=head3 -selection
-
-=head3 -strategy 
-
-=head3 -cache    
-
-=head3 -history 
-
-
-=head2 population($population)
-
-Set/get population.
-
-=head2 type($type)
-
-Set/get type of individuals. Currently it can be set to:
-
-=over 4
-
-=item C<bitvector>,
-
-=item C<listvector>,
-
-=item C<rangevector>,
-
-=item C<combination>.
+Each gene of a "combination" individual/chromosome can assume one string value from a specified list of possible string values. B<All genes are unique.>
 
 =back
 
-=head2 parents($parents)
+=item -population
 
-Set/get number of parents in I<Roulette> crossover.
+This defines the size of the population, i.e. how many chromosomes to simultaneously exist at each generation.
 
-=head2 init()
+=item -crossover 
 
-=head2 evolve()
+This defines the crossover rate. Fairest results are achieved with crossover rate ~0.95.
 
-=head2 history()
+=item -mutation 
 
-=head2 getAvgFitness()
+This defines the mutation rate. Fairest results are achieved with mutation rate ~0.01.
 
-=head2 getFittest()
+=item -parents  
 
-=head2 getHistory()
+This defines how many parents should used in corssover.
 
-=head2 generation()
+=item -selection
 
-=head2 chart(%options)
+This defines how individuals/chromosomes are selected to crossover. It expects an array reference listed below:
+
+    -selection => [ $type, @params ]
+
+where type is one of:
+
+=over 8
+
+=item B<RouletteBasic>
+
+Each individual/chromosome can be selected with probability poportionaly to its fitness.
+
+=item B<Roulette>
+
+At the first best individuals/chromosomes are selected. From this collection
+parents are selected with probability poportionaly to its fitness.
+
+=item B<RouletteDistribution>
+
+Each individual/chromosome has portion of roulette wheel proportionaly to its fitness. Selection is done with
+specified distribution. Supported distributions and paremeters are listed below.
+
+=over 12
+
+=item C<-selection =E<gt> [ 'RouletteDistribution', 'uniform' ]>
+
+Standard uniform distribution. No additional parameters are needed.
+
+=item C<-selection =E<gt> [ 'RouletteDistribution', 'normal', $av, $sd ]>
+
+Normal distribution, where C<$av> is average (default: size of population /2) and $C<$sd> is standard deviation (default: size of population).
+
+
+=item C<-selection =E<gt> [ 'RouletteDistribution', 'beta', $aa, $bb ]>
+
+I<Beta> distribution.  The density of the beta is:
+
+    X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
+
+C<$aa> and C<$bb> are set by default to number of parents.
+
+B<Argument restrictions:> Both $aa and $bb must not be less than 1.0E-37.
+
+=item C<-selection =E<gt> [ 'RouletteDistribution', 'binomial' ]>
+
+Binomial distribution. No additional parameters are needed.
+
+=item C<-selection =E<gt> [ 'RouletteDistribution', 'chi_square', $df ]>
+
+Chi-square distribution with C<$df> degrees of freedom. C<$df> by default is set to size of population.
+
+=item C<-selection =E<gt> [ 'RouletteDistribution', 'exponential', $av ]>
+
+Exponential distribution, where C<$av> is average . C<$av> by default is set to size of population.
+
+=item C<-selection =E<gt> [ 'RouletteDistribution', 'poisson', $mu ]>
+
+Poisson distribution, where C<$mu> is mean. C<$mu> by default is set to size of population.
+
+=back
+
+=item B<Distribution>
+
+Chromosomes/individuals are selected with specified distribution. See below.
+
+=over 12
+
+=item C<-selection =E<gt> [ 'Distribution', 'uniform' ]>
+
+Standard uniform distribution. No additional parameters are needed.
+
+=item C<-selection =E<gt> [ 'Distribution', 'normal', $av, $sd ]>
+
+Normal distribution, where C<$av> is average (default: size of population /2) and $C<$sd> is standard deviation (default: size of population).
+
+=item C<-selection =E<gt> [ 'Distribution', 'beta', $aa, $bb ]>
+
+I<Beta> distribution.  The density of the beta is:
+
+    X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
+
+C<$aa> and C<$bb> are set by default to number of parents.
+
+B<Argument restrictions:> Both $aa and $bb must not be less than 1.0E-37.
+
+=item C<-selection =E<gt> [ 'Distribution', 'binomial' ]>
+
+Binomial distribution. No additional parameters are needed.
+
+=item C<-selection =E<gt> [ 'Distribution', 'chi_square', $df ]>
+
+Chi-square distribution with C<$df> degrees of freedom. C<$df> by default is set to size of population.
+
+=item C<-selection =E<gt> [ 'Distribution', 'exponential', $av ]>
+
+Exponential distribution, where C<$av> is average . C<$av> by default is set to size of population.
+
+=item C<-selection =E<gt> [ 'Distribution', 'poisson', $mu ]>
+
+Poisson distribution, where C<$mu> is mean. C<$mu> by default is set to size of population.
+
+=back
+
+=back
+
+=item -strategy 
+
+This defines strategy of crossover operation. It expects an array reference listed below:
+
+    -strategy => [ $type, @params ]
+
+where type is one of:
+
+=over 4
+
+=item PointsSimple
+
+Simple crossover in one or many points. Best chromosomes/individuals are selected to new generation. In example:
+
+    -crossover => [ 'PointsSimple', $n ]
+
+where C<$n> is number of points for crossing.
+
+=item PointsBasic
+
+Crossover in one or many points. In basic crossover selected parents are crossed and one (random) of children is moved to new generation. In example:
+
+    -crossover => [ 'PointsBasic', $n ]
+
+where C<$n> is number of points for crossing.
+
+=item Points
+
+Crossover in one or many points. In normal crossover selected parents are crossed and the best of child is moved to new generation. In example:
+
+    -crossover => [ 'Points', $n ]
+
+where C<$n> is number of points for crossing.
+
+=item PointsAdvenced
+
+Crossover in one or many points. After crossover best chromosomes/individuals from all parents and chidren are selected to new generation. In example:
+
+    -crossover => [ 'PointsAdvanced', $n ]
+
+where C<$n> is number of points for crossing.
+
+=item Distribution
+
+In I<distribution> crossover parents are crossed in points selected with specified distribution. See below.
+
+=over 8
+
+=item C<-selection =E<gt> [ 'Distribution', 'uniform' ]>
+
+Standard uniform distribution. No additional parameters are needed.
+
+=item C<-selection =E<gt> [ 'Distribution', 'normal', $av, $sd ]>
+
+Normal distribution, where C<$av> is average (default: size of population /2) and $C<$sd> is standard deviation (default: size of population).
+
+=item C<-selection =E<gt> [ 'Distribution', 'beta', $aa, $bb ]>
+
+I<Beta> distribution.  The density of the beta is:
+
+    X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
+
+C<$aa> and C<$bb> are set by default to number of parents.
+
+B<Argument restrictions:> Both $aa and $bb must not be less than 1.0E-37.
+
+=item C<-selection =E<gt> [ 'Distribution', 'binomial' ]>
+
+Binomial distribution. No additional parameters are needed.
+
+=item C<-selection =E<gt> [ 'Distribution', 'chi_square', $df ]>
+
+Chi-square distribution with C<$df> degrees of freedom. C<$df> by default is set to size of population.
+
+=item C<-selection =E<gt> [ 'Distribution', 'exponential', $av ]>
+
+Exponential distribution, where C<$av> is average . C<$av> by default is set to size of population.
+
+=item C<-selection =E<gt> [ 'Distribution', 'poisson', $mu ]>
+
+Poisson distribution, where C<$mu> is mean. C<$mu> by default is set to size of population.
+
+=back
+
+=item PMX
+
+PMX method defined by Goldberg and Lingle in 1985. Parameters: I<none>.
+
+=item OX
+
+OX method defined by Davis (?) in 1985. Parameters: I<none>.
+
+=back
+
+=item -cache    
+
+This defines if cache should be used. Correct values are: 1 or 0 (default: I<0>).
+
+=item -history 
+
+This defines if history should be collected. Correct values are: 1 or 0 (default: I<0>).
+
+Collect history.
+
+=back
+
+=item I<$ga>-E<gt>B<population>($population)
+
+Set/get size of the population. This defines the size of the population, i.e. how many chromosomes to simultaneously exist at each generation.
+
+=item I<$ga>-E<gt>B<indType>()
+
+Get type of individuals/chromosomes. Currently supported types are:
+
+=over 4
+
+=item C<bitvector>
+
+Chromosomes will be just bitvectors. See documentation of C<new> method.
+
+=item C<listvector>
+
+Chromosomes will be lists of specified values. See documentation of C<new> method.
+
+=item C<rangevector>
+
+Chromosomes will be lists of values from specified range. See documentation of C<new> method.
+
+=item C<combination>
+
+Chromosomes will be uniq lists of specified values. This is used for example in I<Traveling Salesman Problem>. See documentation of C<new> method.
+
+=back
+
+In example:
+
+    my $type = $ga->type();
+
+=item I<$ga>-E<gt>B<type>()
+
+Alias for C<indType>.
+
+=item I<$ga>-E<gt>B<crossProb>()
+
+This method is used to query and set the crossover rate.
+
+=item I<$ga>-E<gt>B<crossover>()
+
+Alias for C<crossProb>.
+
+=item I<$ga>-E<gt>B<mutProb>()
+
+This method is used to query and set the mutation rate.
+
+=item I<$ga>-E<gt>B<mutation>()
+
+Alias for C<mutation>.
+
+=item I<$ga>-E<gt>B<parents>($parents)
+
+Set/get number of parents in a crossover.
+
+=item I<$ga>-E<gt>B<init>($args)
+
+This method initializes the population with random individuals/chromosomes. It MUST be called before any call to C<evolve()>. It expects one argument, which depends on the type of individuals/chromosomes:
+
+=over 4
+
+=item B<bitvector>
+
+For bitvectors, the argument is simply the length of the bitvector.
+
+    $ga->init(10);
+
+This initializes a population where each individual/chromosome has 10 genes.
+
+=item B<listvector>
+
+For listvectors, the argument is an anonymous list of lists. The number of sub-lists is equal to the number of genes of each individual/chromosome. Each sub-list defines the possible string values that the corresponding gene can assume.
+
+    $ga->init([
+               [qw/red blue green/],
+               [qw/big medium small/],
+               [qw/very_fat fat fit thin very_thin/],
+              ]);
+
+This initializes a population where each individual/chromosome has 3 genes and each gene can assume one of the given values.
+
+=item B<rangevector>
+
+For rangevectors, the argument is an anonymous list of lists. The number of sub-lists is equal to the number of genes of each individual/chromosome. Each sub-list defines the minimum and maximum integer values that the corresponding gene can assume.
+
+    $ga->init([
+               [1, 5],
+               [0, 20],
+               [4, 9],
+              ]);
+
+This initializes a population where each individual/chromosome has 3 genes and each gene can assume an integer within the corresponding range.
+
+=item B<combination>
+
+For combination, the argument is an anonymous list of possible values of gene.
+
+    $ga->init( [ 'a', 'b', 'c' ] );
+
+This initializes a population where each chromosome has 3 genes and each gene is uniq combination of 'a', 'b' and 'c'. For example genes looks something like that:
+
+    [ 'a', 'b', 'c' ]    # gene 1
+    [ 'c', 'a', 'b' ]    # gene 2
+    [ 'b', 'c', 'a' ]    # gene 3
+    # ...and so on...
+
+=back
+
+=item I<$ga>-E<gt>B<evolve>()
+
+This method causes the GA to evolve the population for the specified number of generations. 
+
+=item I<$ga>-E<gt>B<getHistory>()
+
+Get history of the evolution. It is in a format listed below:
+
+	[
+		# gen0   gen1   gen2   ...          # generations
+		[ max0,  max1,  max2,  ... ],       # max values
+		[ mean,  mean1, mean2, ... ],       # mean values
+		[ min0,  min1,  min2,  ... ],       # min values
+	]
+
+=item I<$ga>-E<gt>B<getAvgFitness>()
+
+Get I<max>, I<mean> and I<min> score of the current generation. In example:
+
+    my ($max, $mean, $min) = $ga->getAvgFitness();
+
+=item I<$ga>-E<gt>B<getFittest>()
+
+Get fittest chromosome.
+
+=item I<$ga>-E<gt>B<generation>()
+
+Get number of generation.
+
+=item I<$ga>-E<gt>B<people>()
+
+Returns an anonymous list of individuals/chromosomes of the current population. 
+
+B<IMPORTANT:> the actual array reference used by the C<AI::Genetic::Pro> object is returned, so any changes to it will be reflected in I<$ga>.
+
+=item I<$ga>-E<gt>B<chromosomes>()
+
+Alias for C<people>.
+
+=item I<$ga>-E<gt>B<chart>(%options)
 
 Generate a chart describing changes of min, mean, max scores in Your
 population. To satisfy Your needs, You can pass following options:
 
-=head3 -filename
+=over 4
+
+=item -filename
 
 File to save a chart in (B<obligatory>).
 
-=head3 -title
+=item -title
 
 Title of a chart (default: I<Evolution>).
 
-=head3 -x_label
+=item -x_label
 
 X label (default: I<Generations>).
 
-=head3 -y_label
+=item -y_label
 
 Y label (default: I<Value>).
 
-=head3 -format
+=item -format
 
 Format of values, like C<sprintf> (default: I<'%.2f'>).
 
-=head3 -legend1
+=item -legend1
 
 Description of min line (default: I<Min value>).
 
-=head3 -legend2
+=item -legend2
 
 Description of min line (default: I<Mean value>).
 
-=head3 -legend3
+=item -legend3
 
 Description of min line (default: I<Max value>).
 
-=head3 -width
+=item -width
 
 Width of a chart (default: I<640>).
 
-=head3 -height
+=item -height
 
 Height of a chart (default: I<480>).
 
-=head3 -font
+=item -font
 
 Path to font in (*.ttf format) to be used (default: none).
 
-=head3 -logo
+=item -logo
 
 Path to logo (png/jpg image) to embed in a chart (default: none).
 
-=head3 In example:
+=item In example:
 
 	$ga->chart(-width => 480, height => 320, -filename => 'chart.png');
 
-=head2 save($file)
+=back
+
+=item I<$ga>-E<gt>B<save>($file)
 
 Save current state of the genetic algorithm to a specified file.
 
-=head2 load($file)
+=item I<$ga>-E<gt>B<load>($file)
 
 Load a state of the genetic algorithm from a specified file. 
 
-=head2 as_array($chromosome)
+=item I<$ga>-E<gt>B<as_array>($chromosome)
 
 Return an array representing specified chromosome.
 
-=head2 as_value($chromosome)
+=item I<$ga>-E<gt>B<as_value>($chromosome)
 
 Return score of specified chromosome. Value of I<chromosome> is 
 calculated by fitness function.
 
-=head2 as_string($chromosome)
+=item I<$ga>-E<gt>B<as_string>($chromosome)
 
 Return string-representation of specified chromosome. 
 
+=back
 
 =head1 DOCUMENTATION
 
-At the moment for more information see documentation of L<AI::Genetic>.
-It is compatible in most cases. 
+This documentation is still incomplete, however it is based on POD of L<AI::Genetic>.
+So if You are in a trouble, try take a look to the documentation of L<AI::Genetic>.
 
 =head1 SUPPORT
 
@@ -649,11 +1002,11 @@ documentation (for now). However it is used in many production environments.
 
 =over 4
 
-=item More documentation.
+=item Examples.
 
 =item More tests.
 
-=item Warnings.
+=item Warnings in case of incorrect parameters.
 
 =back
 
@@ -667,7 +1020,7 @@ A small script which yields the problem will probably be of help.
 
 =head1 AUTHOR
 
-Strzelecki Łukasz <strzelec@rswsystems.com>
+Strzelecki Lukasz <strzelec@rswsystems.com>
 
 =head1 SEE ALSO
 
@@ -675,7 +1028,7 @@ L<AI::Genetic>
 
 =head1 COPYRIGHT
 
-Copyright (c) Strzelecki Łukasz. All rights reserved.
+Copyright (c) Strzelecki Lukasz. All rights reserved.
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 

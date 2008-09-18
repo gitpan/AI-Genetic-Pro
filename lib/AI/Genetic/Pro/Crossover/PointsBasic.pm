@@ -4,7 +4,6 @@ use warnings;
 use strict;
 use Clone qw( clone );
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
-#use AI::Genetic::Pro::Array::PackTemplate;
 #=======================================================================
 sub new { bless { points => $_[1] ? $_[1] : 1 }, $_[0]; }
 #=======================================================================
