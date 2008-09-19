@@ -263,7 +263,7 @@ METHODS
                     chromosomes/individuals are selected to new generation.
                     In example:
 
-                        -crossover => [ 'PointsSimple', $n ]
+                        -strategy => [ 'PointsSimple', $n ]
 
                     where $n is number of points for crossing.
 
@@ -272,7 +272,7 @@ METHODS
                     selected parents are crossed and one (random) of
                     children is moved to new generation. In example:
 
-                        -crossover => [ 'PointsBasic', $n ]
+                        -strategy => [ 'PointsBasic', $n ]
 
                     where $n is number of points for crossing.
 
@@ -281,7 +281,7 @@ METHODS
                     selected parents are crossed and the best of child is
                     moved to new generation. In example:
 
-                        -crossover => [ 'Points', $n ]
+                        -strategy => [ 'Points', $n ]
 
                     where $n is number of points for crossing.
 
@@ -290,7 +290,7 @@ METHODS
                     chromosomes/individuals from all parents and chidren are
                     selected to new generation. In example:
 
-                        -crossover => [ 'PointsAdvanced', $n ]
+                        -strategy => [ 'PointsAdvanced', $n ]
 
                     where $n is number of points for crossing.
 
@@ -298,17 +298,17 @@ METHODS
                     In *distribution* crossover parents are crossed in
                     points selected with specified distribution. See below.
 
-                    "-selection => [ 'Distribution', 'uniform' ]"
+                    "-strategy => [ 'Distribution', 'uniform' ]"
                             Standard uniform distribution. No additional
                             parameters are needed.
 
-                    "-selection => [ 'Distribution', 'normal', $av, $sd ]"
+                    "-strategy => [ 'Distribution', 'normal', $av, $sd ]"
                             Normal distribution, where $av is average
                             (default: size of population /2) and $$sd is
                             standard deviation (default: size of
                             population).
 
-                    "-selection => [ 'Distribution', 'beta', $aa, $bb ]"
+                    "-strategy => [ 'Distribution', 'beta', $aa, $bb ]"
                             *Beta* distribution. The density of the beta is:
 
                                 X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
@@ -319,20 +319,20 @@ METHODS
                             Argument restrictions: Both $aa and $bb must not
                             be less than 1.0E-37.
 
-                    "-selection => [ 'Distribution', 'binomial' ]"
+                    "-strategy => [ 'Distribution', 'binomial' ]"
                             Binomial distribution. No additional parameters
                             are needed.
 
-                    "-selection => [ 'Distribution', 'chi_square', $df ]"
+                    "-strategy => [ 'Distribution', 'chi_square', $df ]"
                             Chi-square distribution with $df degrees of
                             freedom. $df by default is set to size of
                             population.
 
-                    "-selection => [ 'Distribution', 'exponential', $av ]"
+                    "-strategy => [ 'Distribution', 'exponential', $av ]"
                             Exponential distribution, where $av is average .
                             $av by default is set to size of population.
 
-                    "-selection => [ 'Distribution', 'poisson', $mu ]"
+                    "-strategy => [ 'Distribution', 'poisson', $mu ]"
                             Poisson distribution, where $mu is mean. $mu by
                             default is set to size of population.
 
@@ -557,7 +557,7 @@ METHODS
 
 DOCUMENTATION
     This documentation is still incomplete, however it is based on POD of
-    AI::Genetic. So if You are in a trouble, try take a look to the
+    AI::Genetic. So if You are in a trouble, try to take a look to the
     documentation of AI::Genetic.
 
 SUPPORT

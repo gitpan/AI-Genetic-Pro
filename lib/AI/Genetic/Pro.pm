@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.17;
+$VERSION = 0.18;
 #---------------
 
 use warnings;
@@ -664,7 +664,7 @@ where type is one of:
 
 Simple crossover in one or many points. Best chromosomes/individuals are selected to new generation. In example:
 
-    -crossover => [ 'PointsSimple', $n ]
+    -strategy => [ 'PointsSimple', $n ]
 
 where C<$n> is number of points for crossing.
 
@@ -672,7 +672,7 @@ where C<$n> is number of points for crossing.
 
 Crossover in one or many points. In basic crossover selected parents are crossed and one (random) of children is moved to new generation. In example:
 
-    -crossover => [ 'PointsBasic', $n ]
+    -strategy => [ 'PointsBasic', $n ]
 
 where C<$n> is number of points for crossing.
 
@@ -680,7 +680,7 @@ where C<$n> is number of points for crossing.
 
 Crossover in one or many points. In normal crossover selected parents are crossed and the best of child is moved to new generation. In example:
 
-    -crossover => [ 'Points', $n ]
+    -strategy => [ 'Points', $n ]
 
 where C<$n> is number of points for crossing.
 
@@ -688,7 +688,7 @@ where C<$n> is number of points for crossing.
 
 Crossover in one or many points. After crossover best chromosomes/individuals from all parents and chidren are selected to new generation. In example:
 
-    -crossover => [ 'PointsAdvanced', $n ]
+    -strategy => [ 'PointsAdvanced', $n ]
 
 where C<$n> is number of points for crossing.
 
@@ -698,15 +698,15 @@ In I<distribution> crossover parents are crossed in points selected with specifi
 
 =over 8
 
-=item C<-selection =E<gt> [ 'Distribution', 'uniform' ]>
+=item C<-strategy =E<gt> [ 'Distribution', 'uniform' ]>
 
 Standard uniform distribution. No additional parameters are needed.
 
-=item C<-selection =E<gt> [ 'Distribution', 'normal', $av, $sd ]>
+=item C<-strategy =E<gt> [ 'Distribution', 'normal', $av, $sd ]>
 
 Normal distribution, where C<$av> is average (default: size of population /2) and $C<$sd> is standard deviation (default: size of population).
 
-=item C<-selection =E<gt> [ 'Distribution', 'beta', $aa, $bb ]>
+=item C<-strategy =E<gt> [ 'Distribution', 'beta', $aa, $bb ]>
 
 I<Beta> distribution.  The density of the beta is:
 
@@ -716,19 +716,19 @@ C<$aa> and C<$bb> are set by default to number of parents.
 
 B<Argument restrictions:> Both $aa and $bb must not be less than 1.0E-37.
 
-=item C<-selection =E<gt> [ 'Distribution', 'binomial' ]>
+=item C<-strategy =E<gt> [ 'Distribution', 'binomial' ]>
 
 Binomial distribution. No additional parameters are needed.
 
-=item C<-selection =E<gt> [ 'Distribution', 'chi_square', $df ]>
+=item C<-strategy =E<gt> [ 'Distribution', 'chi_square', $df ]>
 
 Chi-square distribution with C<$df> degrees of freedom. C<$df> by default is set to size of population.
 
-=item C<-selection =E<gt> [ 'Distribution', 'exponential', $av ]>
+=item C<-strategy =E<gt> [ 'Distribution', 'exponential', $av ]>
 
 Exponential distribution, where C<$av> is average . C<$av> by default is set to size of population.
 
-=item C<-selection =E<gt> [ 'Distribution', 'poisson', $mu ]>
+=item C<-strategy =E<gt> [ 'Distribution', 'poisson', $mu ]>
 
 Poisson distribution, where C<$mu> is mean. C<$mu> by default is set to size of population.
 
@@ -991,7 +991,7 @@ Return string-representation of specified chromosome.
 =head1 DOCUMENTATION
 
 This documentation is still incomplete, however it is based on POD of L<AI::Genetic>.
-So if You are in a trouble, try take a look to the documentation of L<AI::Genetic>.
+So if You are in a trouble, try to take a look to the documentation of L<AI::Genetic>.
 
 =head1 SUPPORT
 
