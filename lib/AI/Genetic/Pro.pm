@@ -320,7 +320,10 @@ sub _mutation {
 	
 	unless($self->_mutator){
 		my $mutator = q/AI::Genetic::Pro::Mutation::/ . ucfirst(lc($self->type));
-		$mutator->require;
+		unless($mutator->require){
+			$mutator = q/AI::Genetic::Pro::Mutation::Bitvector/;
+			$mutator->require;
+		}
 		$self->_mutator($mutator->new);
 	}
 	
@@ -1017,6 +1020,10 @@ It may be difficult for me to reproduce the problem as almost every setup
 is different.
 
 A small script which yields the problem will probably be of help. 
+
+=head1 THANKS
+
+Thanks to Alec Chen for reporting a bug.
 
 =head1 AUTHOR
 
