@@ -1,5 +1,8 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.20 Sat, 04 Oct 2008 02:39:28 +0200
+	- Again... Little bug in mutation (inversion; listvectors only) - fixed. Thanks to Alec Chen :-)
+
 0.19 Wed, 24 Sep 2008 19:52:33 +0200
 	- Little bug in mutation - fixed. Thanks to Alec Chen :-) 
 

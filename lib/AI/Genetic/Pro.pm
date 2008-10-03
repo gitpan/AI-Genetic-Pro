@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.18;
+$VERSION = 0.20;
 #---------------
 
 use warnings;
@@ -1023,7 +1023,8 @@ A small script which yields the problem will probably be of help.
 
 =head1 THANKS
 
-Thanks to Alec Chen for reporting a bug.
+Again... Alec Chen for reporting a bug :-)
+Alec Chen for reporting a bug.
 
 =head1 AUTHOR
 
