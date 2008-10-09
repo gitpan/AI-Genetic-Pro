@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.20;
+$VERSION = 0.21;
 #---------------
 
 use warnings;
@@ -98,7 +98,8 @@ sub init {
 	}
 	
 	my $size = 0;
-	for(@{$self->_translations}){ $size = $#$_ if $#$_ > $size; }
+	if($self->type ne q/rangevector/){ for(@{$self->_translations}){ $size = $#$_ if $#$_ > $size; } }
+	else{ for(@{$self->_translations}){ $size = $_->[1] if $_->[1] > $size; } }
 	my $package = get_package_by_element_size($size);
 
 	$self->chromosomes( [ ] );
@@ -321,7 +322,7 @@ sub _mutation {
 	unless($self->_mutator){
 		my $mutator = q/AI::Genetic::Pro::Mutation::/ . ucfirst(lc($self->type));
 		unless($mutator->require){
-			$mutator = q/AI::Genetic::Pro::Mutation::Bitvector/;
+			$mutator = q/AI::Genetic::Pro::Mutation::Listvector/;
 			$mutator->require;
 		}
 		$self->_mutator($mutator->new);
@@ -1023,8 +1024,9 @@ A small script which yields the problem will probably be of help.
 
 =head1 THANKS
 
-Again... Alec Chen for reporting a bug :-)
-Alec Chen for reporting a bug.
+Christoph Meissner for reporting a bug.
+
+Alec Chen for reporting some bugs.
 
 =head1 AUTHOR
 

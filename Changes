@@ -1,5 +1,8 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.21 Fri, 10 Oct 2008 03:41:39 +0200
+	- Fixed mutation in rangevectors. Thanks to Christoph Meissner :-)
+
 0.20 Sat, 04 Oct 2008 02:39:28 +0200
 	- Again... Little bug in mutation (inversion; listvectors only) - fixed. Thanks to Alec Chen :-)
 

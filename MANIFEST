@@ -15,6 +15,7 @@ lib/AI/Genetic/Pro/Chromosome.pm
 lib/AI/Genetic/Pro/Mutation/Combination.pm
 lib/AI/Genetic/Pro/Mutation/Bitvector.pm
 lib/AI/Genetic/Pro/Mutation/Listvector.pm
+lib/AI/Genetic/Pro/Mutation/Rangevector.pm
 lib/AI/Genetic/Pro/Selection/Roulette.pm
 lib/AI/Genetic/Pro/Selection/RouletteDistribution.pm
 lib/AI/Genetic/Pro/Selection/RouletteBasic.pm

@@ -1,7 +1,8 @@
-package AI::Genetic::Pro::Mutation::Listvector;
+package AI::Genetic::Pro::Mutation::Rangevector;
 
 use warnings;
 use strict;
+use Math::Random qw(random_uniform_integer);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }
@@ -16,7 +17,7 @@ sub run {
 	foreach my $chromosome (@{$ga->{chromosomes}}){
 		next if rand() >= $mutation;
 		my $idx = int rand @$chromosome;
-		$chromosome->[$idx] = int rand @{$ga->_translations->[$idx]};
+		$chromosome->[$idx] = random_uniform_integer(1, @{$ga->_translations->[$idx]});
 	}
 	
 	return 1;
