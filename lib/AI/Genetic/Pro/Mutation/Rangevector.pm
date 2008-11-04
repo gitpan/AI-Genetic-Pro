@@ -15,7 +15,7 @@ sub run {
 	
 	# main loop
 	foreach my $chromosome (@{$ga->{chromosomes}}){
-		next if rand() >= $mutation;
+		next if rand() <= $mutation;
 		my $idx = int rand @$chromosome;
 		$chromosome->[$idx] = random_uniform_integer(1, @{$ga->_translations->[$idx]});
 	}

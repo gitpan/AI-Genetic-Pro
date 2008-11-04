@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use Clone qw( clone );
 use List::MoreUtils qw(first_index);
-use Data::Dumper; $Data::Dumper::Sortkeys = 1;
+#use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }
 #=======================================================================

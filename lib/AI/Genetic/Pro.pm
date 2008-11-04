@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.21;
+$VERSION = 0.22;
 #---------------
 
 use warnings;
@@ -15,7 +15,7 @@ use List::MoreUtils qw(minmax first_index);
 use UNIVERSAL::require;
 use AI::Genetic::Pro::Array::Type qw(get_package_by_element_size);
 use AI::Genetic::Pro::Chromosome;
-use base qw(Class::Accessor::Fast);
+use base qw(Class::Accessor::Fast::XS);
 #-----------------------------------------------------------------------
 __PACKAGE__->mk_accessors(qw(
 	type
@@ -32,6 +32,7 @@ __PACKAGE__->mk_accessors(qw(
 	selection 		_selector 
 	_translations
 	generation
+	preserve		
 ));
 #=======================================================================
 # Additional modules
@@ -257,13 +258,13 @@ sub as_value {
 #=======================================================================
 # ALGORITHM ############################################################
 #=======================================================================
-sub _calculate_fitness_cached {
-	my ($self, $chromosome) = @_;
-	my $key = ${tied(@$chromosome)};
-	return $self->_cache->{$key} if exists $self->_cache->{$key};
-	$self->_cache->{$key} = $self->fitness()->($self, $chromosome);
-	return $self->_cache->{$key};
-}
+#sub _calculate_fitness_cached {
+#	my ($self, $chromosome) = @_;
+#	my $key = ${tied(@$chromosome)};
+#	return $self->_cache->{$key} if exists $self->_cache->{$key};
+#	$self->_cache->{$key} = $self->fitness()->($self, $chromosome);
+#	return $self->_cache->{$key};
+#}
 #=======================================================================
 sub _calculate_fitness_all {
 	my ($self) = @_;
@@ -346,20 +347,42 @@ sub evolve {
 	my ($self, $generations) = @_;
 	
 	$self->_calculate_fitness_all() unless keys %{ $self->_fitness };
-	
-	for my $generation(1..$generations){
-		# terminate ----------------------------------------------------
-		last if $self->terminate and $self->terminate->($self);
-		# update generation --------------------------------------------
-		$self->generation($self->generation + 1);
-		# update history -----------------------------------------------
-		$self->_save_history;
-		# selection ----------------------------------------------------
-		$self->_select_parents();
-		# crossover ----------------------------------------------------
-		$self->_crossover();
-		# mutation -----------------------------------------------------
-		$self->_mutation();
+	# split into two loops just for speed
+	unless($self->preserve){
+		for my $generation(1..$generations){
+			# terminate ----------------------------------------------------
+			last if $self->terminate and $self->terminate->($self);
+			# update generation --------------------------------------------
+			$self->generation($self->generation + 1);
+			# update history -----------------------------------------------
+			$self->_save_history;
+			# selection ----------------------------------------------------
+			$self->_select_parents();
+			# crossover ----------------------------------------------------
+			$self->_crossover();
+			# mutation -----------------------------------------------------
+			$self->_mutation();
+		}
+	}else{
+		for my $generation(1..$generations){
+			# terminate ----------------------------------------------------
+			last if $self->terminate and $self->terminate->($self);
+			# update generation --------------------------------------------
+			$self->generation($self->generation + 1);
+			# update history -----------------------------------------------
+			$self->_save_history;
+			#---------------------------------------------------------------
+			my $preserved = ($self->getFittest)[0] if $self->preserve;
+			# selection ----------------------------------------------------
+			$self->_select_parents();
+			# crossover ----------------------------------------------------
+			$self->_crossover();
+			# mutation -----------------------------------------------------
+			$self->_mutation();
+			#---------------------------------------------------------------
+			$self->chromosomes->[$#{$self->chromosomes}] = $preserved;
+			$self->_fitness->{$#{$self->chromosomes}} = $self->fitness()->($self, $preserved);
+		}
 	}
 }
 #=======================================================================
@@ -431,6 +454,7 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
         -strategy       => [ 'Points', 2 ],  # crossover strategy
         -cache          => 0,                # cache results
         -history        => 1,                # remember best results
+        -preserved      => 1,                # remember the best chromosome
     );
 	
     # init population of 32-bit vectors
@@ -542,6 +566,10 @@ This defines the crossover rate. Fairest results are achieved with crossover rat
 =item -mutation 
 
 This defines the mutation rate. Fairest results are achieved with mutation rate ~0.01.
+
+=item -preserve
+
+This defines injection of the best chromosome into a next generation. It causes a little slow down, however (very often) much better results are achieved.
 
 =item -parents  
 

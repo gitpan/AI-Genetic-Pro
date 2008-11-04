@@ -14,7 +14,7 @@ sub run {
 	my ($fitness) = ($ga->_fitness);
 	my (@parents, @elders);
 	#-------------------------------------------------------------------
-	my $total = sum(values %$fitness) + 1;
+	my $total = sum(values %$fitness) + 1; $total ||= 1;
 	my $count = $#{$ga->chromosomes};
 	
 	# elders 

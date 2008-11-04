@@ -1,5 +1,9 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.22 Wed, 05 Nov 2008 00:49:18 +0100
+	- Added "-preserve" parameter.
+	- Little speed up (Class::Accessor::Fast => Class::Accessor::Fast::XS).
+
 0.21 Fri, 10 Oct 2008 03:41:39 +0200
 	- Fixed mutation in rangevectors. Thanks to Christoph Meissner :-)
 
