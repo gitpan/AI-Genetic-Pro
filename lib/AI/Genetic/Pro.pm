@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.22;
+$VERSION = 0.23;
 #---------------
 
 use warnings;
@@ -345,11 +345,13 @@ sub _save_history {
 #=======================================================================
 sub evolve {
 	my ($self, $generations) = @_;
-	
+
+	# generations must be defined
+	$generations ||= -1; 	
 	$self->_calculate_fitness_all() unless keys %{ $self->_fitness };
 	# split into two loops just for speed
 	unless($self->preserve){
-		for my $generation(1..$generations){
+		for(my $i = 1; $i != $generations; $i++){
 			# terminate ----------------------------------------------------
 			last if $self->terminate and $self->terminate->($self);
 			# update generation --------------------------------------------
@@ -364,7 +366,7 @@ sub evolve {
 			$self->_mutation();
 		}
 	}else{
-		for my $generation(1..$generations){
+		for(my $i = 1; $i != $generations; $i++){
 			# terminate ----------------------------------------------------
 			last if $self->terminate and $self->terminate->($self);
 			# update generation --------------------------------------------
@@ -899,7 +901,7 @@ This initializes a population where each chromosome has 3 genes and each gene is
 
 =item I<$ga>-E<gt>B<evolve>()
 
-This method causes the GA to evolve the population for the specified number of generations. 
+This method causes the GA to evolve the population for the specified number of generations. If its argument is 0 or C<undef> GA will evolve the population to infinity unless terminate function is specified.
 
 =item I<$ga>-E<gt>B<getHistory>()
 

@@ -28,6 +28,7 @@ SYNOPSIS
             -strategy       => [ 'Points', 2 ],  # crossover strategy
             -cache          => 0,                # cache results
             -history        => 1,                # remember best results
+            -preserved      => 1,                # remember the best chromosome
         );
             
     # init population of 32-bit vectors
@@ -127,6 +128,11 @@ METHODS
         -mutation
                 This defines the mutation rate. Fairest results are achieved
                 with mutation rate ~0.01.
+
+        -preserve
+                This defines injection of the best chromosome into a next
+                generation. It causes a little slow down, however (very
+                often) much better results are achieved.
 
         -parents
                 This defines how many parents should used in corssover.
@@ -461,7 +467,9 @@ METHODS
 
     *$ga*->evolve()
         This method causes the GA to evolve the population for the specified
-        number of generations.
+        number of generations. If its argument is 0 or "undef" GA will
+        evolve the population to infinity unless terminate function is
+        specified.
 
     *$ga*->getHistory()
         Get history of the evolution. It is in a format listed below:
@@ -578,8 +586,9 @@ REPORTING BUGS
     A small script which yields the problem will probably be of help.
 
 THANKS
-    Again... Alec Chen for reporting a bug :-) Alec Chen for reporting a
-    bug.
+    Christoph Meissner for reporting a bug.
+
+    Alec Chen for reporting some bugs.
 
 AUTHOR
     Strzelecki Lukasz <strzelec@rswsystems.com>

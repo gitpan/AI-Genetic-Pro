@@ -1,5 +1,8 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.23 Mon, 10 Nov 2008 10:14:32 +0100
+	- Little modification in main loop. Infinity loop available.
+
 0.22 Wed, 05 Nov 2008 00:49:18 +0100
 	- Added "-preserve" parameter.
 	- Little speed up (Class::Accessor::Fast => Class::Accessor::Fast::XS).
