@@ -310,16 +310,15 @@ METHODS
 
                     "-strategy => [ 'Distribution', 'normal', $av, $sd ]"
                             Normal distribution, where $av is average
-                            (default: size of population /2) and $$sd is
-                            standard deviation (default: size of
-                            population).
+                            (default: number of parents/2) and $sd is
+                            standard deviation (default: number of parents).
 
                     "-strategy => [ 'Distribution', 'beta', $aa, $bb ]"
                             *Beta* distribution. The density of the beta is:
 
                                 X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
 
-                            $aa and $bb are set by default to number of
+                            $aa and $bb are set by default to the number of
                             parents.
 
                             Argument restrictions: Both $aa and $bb must not
@@ -331,16 +330,16 @@ METHODS
 
                     "-strategy => [ 'Distribution', 'chi_square', $df ]"
                             Chi-square distribution with $df degrees of
-                            freedom. $df by default is set to size of
-                            population.
+                            freedom. $df by default is set to the number of
+                            parents.
 
                     "-strategy => [ 'Distribution', 'exponential', $av ]"
                             Exponential distribution, where $av is average .
-                            $av by default is set to size of population.
+                            $av by default is set to the number of parents.
 
                     "-strategy => [ 'Distribution', 'poisson', $mu ]"
                             Poisson distribution, where $mu is mean. $mu by
-                            default is set to size of population.
+                            default is set to the number of parents.
 
                 PMX PMX method defined by Goldberg and Lingle in 1985.
                     Parameters: *none*.

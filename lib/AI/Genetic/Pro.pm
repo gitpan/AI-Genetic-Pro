@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.23;
+$VERSION = 0.24;
 #---------------
 
 use warnings;
@@ -738,7 +738,7 @@ Standard uniform distribution. No additional parameters are needed.
 
 =item C<-strategy =E<gt> [ 'Distribution', 'normal', $av, $sd ]>
 
-Normal distribution, where C<$av> is average (default: size of population /2) and $C<$sd> is standard deviation (default: size of population).
+Normal distribution, where C<$av> is average (default: number of parents/2) and C<$sd> is standard deviation (default: number of parents).
 
 =item C<-strategy =E<gt> [ 'Distribution', 'beta', $aa, $bb ]>
 
@@ -746,7 +746,7 @@ I<Beta> distribution.  The density of the beta is:
 
     X^($aa - 1) * (1 - X)^($bb - 1) / B($aa , $bb) for 0 < X < 1.
 
-C<$aa> and C<$bb> are set by default to number of parents.
+C<$aa> and C<$bb> are set by default to the number of parents.
 
 B<Argument restrictions:> Both $aa and $bb must not be less than 1.0E-37.
 
@@ -756,15 +756,15 @@ Binomial distribution. No additional parameters are needed.
 
 =item C<-strategy =E<gt> [ 'Distribution', 'chi_square', $df ]>
 
-Chi-square distribution with C<$df> degrees of freedom. C<$df> by default is set to size of population.
+Chi-square distribution with C<$df> degrees of freedom. C<$df> by default is set to the number of parents.
 
 =item C<-strategy =E<gt> [ 'Distribution', 'exponential', $av ]>
 
-Exponential distribution, where C<$av> is average . C<$av> by default is set to size of population.
+Exponential distribution, where C<$av> is average . C<$av> by default is set to the number of parents.
 
 =item C<-strategy =E<gt> [ 'Distribution', 'poisson', $mu ]>
 
-Poisson distribution, where C<$mu> is mean. C<$mu> by default is set to size of population.
+Poisson distribution, where C<$mu> is mean. C<$mu> by default is set to the number of parents.
 
 =back
 
