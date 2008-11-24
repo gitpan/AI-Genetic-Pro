@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.24;
+$VERSION = 0.25;
 #---------------
 
 use warnings;
@@ -351,7 +351,7 @@ sub evolve {
 	$self->_calculate_fitness_all() unless keys %{ $self->_fitness };
 	# split into two loops just for speed
 	unless($self->preserve){
-		for(my $i = 1; $i != $generations; $i++){
+		for(my $i = 0; $i != $generations; $i++){
 			# terminate ----------------------------------------------------
 			last if $self->terminate and $self->terminate->($self);
 			# update generation --------------------------------------------
@@ -366,7 +366,7 @@ sub evolve {
 			$self->_mutation();
 		}
 	}else{
-		for(my $i = 1; $i != $generations; $i++){
+		for(my $i = 0; $i != $generations; $i++){
 			# terminate ----------------------------------------------------
 			last if $self->terminate and $self->terminate->($self);
 			# update generation --------------------------------------------

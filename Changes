@@ -1,5 +1,11 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.25 Mon, 24 Nov 2008 18:57:27 +0100
+	- Little fix in a counter of generations.
+
+0.24 Mon, 10 Nov 2008 11:34:12 +0100
+	- Little speed up in main loop.
+
 0.23 Mon, 10 Nov 2008 10:14:32 +0100
 	- Little modification in main loop. Infinity loop available.
 
