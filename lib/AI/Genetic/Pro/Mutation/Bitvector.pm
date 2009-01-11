@@ -10,14 +10,24 @@ sub run {
 	my ($self, $ga) = @_;
 
 	# this is declared here just for speed
-	my $mut = $ga->mutation;
-	my $inv = $mut / 2;
+	my $mutation = $ga->mutation;
 	
 	# main loop
 	foreach my $chromosome (@{$ga->{chromosomes}}){
-		my $rand = rand;
-		if($rand < $inv) { tied(@$chromosome)->reverse; }
-		elsif(rand() < $mut){
+		next if rand() >= $mutation;
+		
+		my $rand = rand();
+		if($rand < 0.16 and $#$chromosome > 1){
+			pop @$chromosome;
+		}elsif($rand < 0.32 and $#$chromosome > 1){
+			shift @$chromosome;
+		}elsif($rand < 0.48 and $#$chromosome < $#{$ga->_translations}){
+			push @$chromosome, rand > 0.5 ? 0 : 1;
+		}elsif($rand < 0.64 and $#$chromosome < $#{$ga->_translations}){
+			unshift @$chromosome, rand > 0.5 ? 0 : 1;
+		}elsif($rand < 0.8){
+			tied(@$chromosome)->reverse;
+		}else{
 			my $idx = int rand @$chromosome;
 			$chromosome->[$idx] = $chromosome->[$idx] ? 0 : 1;
 		}

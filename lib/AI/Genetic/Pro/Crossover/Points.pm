@@ -19,14 +19,21 @@ sub run {
 		
 		unless(scalar @elders){
 			$_fitness->{scalar(@children)} = $fitness->($ga, $chromosomes->[$elders[0]]);
-			#push @children, clone($chromosomes->[$elders[0]]);
 			push @children, $chromosomes->[$elders[0]];
 			next;
 		}
 		
-		# DO POPRAWY !!!
-		my @points = map { 1 + int(rand $#{$chromosomes->[0]}) } 1..$self->{points};
+		# need some more work on it
+		my $shortest = 0;
+		if($ga->vriable_length){
+			for my $el(@elders){
+				$shortest = $el if $#{$chromosomes->[$el]} < $#{$chromosomes->[$shortest]};
+			}
+		}
+		
+		my @points = map { 1 + int(rand $#{$chromosomes->[$shortest]}) } 1..$self->{points};
 		@elders = map { clone($chromosomes->[$_]) } @elders;
+		
 		for my $pt(@points){
 			@elders = sort {
 						splice @$b, 0, $pt, splice( @$a, 0, $pt, @$b[0..$pt-1] );

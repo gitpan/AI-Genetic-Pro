@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.25;
+$VERSION = 0.26;
 #---------------
 
 use warnings;
@@ -33,6 +33,7 @@ __PACKAGE__->mk_accessors(qw(
 	_translations
 	generation
 	preserve		
+	vriable_length
 ));
 #=======================================================================
 # Additional modules
@@ -46,7 +47,14 @@ sub new {
 	my $class = shift;
 	
 	my %opts = map { if(ref $_){$_}else{ /^-?(.*)$/o; $1 }} @_;
-	return bless \%opts, $class;
+	my $self = bless \%opts, $class;
+	
+	croak(q/Type of chromosomes cannot be "combination" if "vriable length" feature is active!/)
+		if $self->type eq q/combination/ and $self->variable_length;
+	croak(q/Strategy cannot be "/,$self->strategy,q/" if "vriable length" feature is active!/ )
+		if $self->strategy eq 'PMX' or $self->strategy eq 'OX' and $self->variable_length;
+	
+	return $self;
 }
 #=======================================================================
 # INIT #################################################################
@@ -103,10 +111,16 @@ sub init {
 	else{ for(@{$self->_translations}){ $size = $_->[1] if $_->[1] > $size; } }
 	my $package = get_package_by_element_size($size);
 
+
+	my $length = sub { $#$data; };
+	$length = sub { 1 + int(rand(scalar($#$data))); } if $self->vriable_length;
+
 	$self->chromosomes( [ ] );
 	push @{$self->chromosomes}, 
-		AI::Genetic::Pro::Chromosome->new($self->_translations, $self->type, $package)
+		AI::Genetic::Pro::Chromosome->new($self->_translations, $self->type, $package, $length->())
 			for 1..$self->population;
+			
+	$self->_calculate_fitness_all();
 }
 #=======================================================================
 # SAVE / LOAD ##########################################################
@@ -258,14 +272,6 @@ sub as_value {
 #=======================================================================
 # ALGORITHM ############################################################
 #=======================================================================
-#sub _calculate_fitness_cached {
-#	my ($self, $chromosome) = @_;
-#	my $key = ${tied(@$chromosome)};
-#	return $self->_cache->{$key} if exists $self->_cache->{$key};
-#	$self->_cache->{$key} = $self->fitness()->($self, $chromosome);
-#	return $self->_cache->{$key};
-#}
-#=======================================================================
 sub _calculate_fitness_all {
 	my ($self) = @_;
 	
@@ -347,8 +353,8 @@ sub evolve {
 	my ($self, $generations) = @_;
 
 	# generations must be defined
-	$generations ||= -1; 	
-	$self->_calculate_fitness_all() unless keys %{ $self->_fitness };
+	$generations ||= -1; 	 
+		
 	# split into two loops just for speed
 	unless($self->preserve){
 		for(my $i = 0; $i != $generations; $i++){
@@ -457,6 +463,7 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
         -cache          => 0,                # cache results
         -history        => 1,                # remember best results
         -preserved      => 1,                # remember the best chromosome
+        -vriable_length	=> 1,				 # variable-lenght of chromosomes
     );
 	
     # init population of 32-bit vectors
@@ -572,6 +579,10 @@ This defines the mutation rate. Fairest results are achieved with mutation rate 
 =item -preserve
 
 This defines injection of the best chromosome into a next generation. It causes a little slow down, however (very often) much better results are achieved.
+
+=item -vriable_length
+
+This defines if variable length of chromosomes is allowed.
 
 =item -parents  
 
@@ -1053,6 +1064,8 @@ is different.
 A small script which yields the problem will probably be of help. 
 
 =head1 THANKS
+
+Leonid Zamdborg for recommending the addition of variable-length chromosomes as well as supplying relevant code samples.
 
 Christoph Meissner for reporting a bug.
 

@@ -23,8 +23,15 @@ sub run {
 			next;
 		}
 		
-		# DO POPRAWY !!!
-		my @points = map { 1 + int(rand $#{$chromosomes->[0]}) } 1..$self->{points};
+		# need some more work on it
+		my $shortest = 0;
+		if($ga->vriable_length){
+			for my $el(@elders){
+				$shortest = $el if $#{$chromosomes->[$el]} < $#{$chromosomes->[$shortest]};
+			}
+		}
+	
+		my @points = map { 1 + int(rand $#{$chromosomes->[$shortest]}) } 1..$self->{points};
 		@elders = map { clone($chromosomes->[$_]) } @elders;
 		for my $pt(@points){
 			@elders = sort {

@@ -29,6 +29,7 @@ SYNOPSIS
             -cache          => 0,                # cache results
             -history        => 1,                # remember best results
             -preserved      => 1,                # remember the best chromosome
+            -vriable_length => 1,                # variable-lenght of chromosomes
         );
             
     # init population of 32-bit vectors
@@ -133,6 +134,9 @@ METHODS
                 This defines injection of the best chromosome into a next
                 generation. It causes a little slow down, however (very
                 often) much better results are achieved.
+
+        -vriable_length
+                This defines if variable length of chromosomes is allowed.
 
         -parents
                 This defines how many parents should used in corssover.
@@ -585,6 +589,9 @@ REPORTING BUGS
     A small script which yields the problem will probably be of help.
 
 THANKS
+    Leonid Zamdborg for recommending the addition of variable-length
+    chromosomes as well as supplying relevant code samples.
+
     Christoph Meissner for reporting a bug.
 
     Alec Chen for reporting some bugs.

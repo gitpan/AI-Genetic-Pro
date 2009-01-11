@@ -2,6 +2,7 @@ package AI::Genetic::Pro::Selection::RouletteDistribution;
 
 use warnings;
 use strict;
+use List::Util qw(min);
 use List::MoreUtils qw(first_index);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #use AI::Genetic::Pro::Array::PackTemplate;
@@ -39,10 +40,12 @@ sub run {
 	my $parents = $ga->parents;
 	my $high = scalar @$chromosomes;
 	my (@parents, @wheel);
+	my $const = min values %$fitness;
+	$const = $const < 0 ? abs($const) : 0;
 	my $total = 0;
 	#-------------------------------------------------------------------
 	foreach my $key (keys %$fitness){
-		$total += $fitness->{$key};
+		$total += $fitness->{$key} + $const;
 		push @wheel, [ $key, $total ];
 	}
 	#-------------------------------------------------------------------
