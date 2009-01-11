@@ -15,21 +15,25 @@ sub run {
 	# main loop
 	foreach my $chromosome (@{$ga->{chromosomes}}){
 		next if rand() >= $mutation;
-		
-		my $rand = rand();
-		if($rand < 0.16 and $#$chromosome > 1){
-			pop @$chromosome;
-		}elsif($rand < 0.32 and $#$chromosome > 1){
-			shift @$chromosome;
-		}elsif($rand < 0.48 and $#$chromosome < $#{$ga->_translations}){
-			push @$chromosome, rand > 0.5 ? 0 : 1;
-		}elsif($rand < 0.64 and $#$chromosome < $#{$ga->_translations}){
-			unshift @$chromosome, rand > 0.5 ? 0 : 1;
-		}elsif($rand < 0.8){
-			tied(@$chromosome)->reverse;
+		if($ga->variable_length){
+			my $rand = rand();
+			if($rand < 0.16 and $#$chromosome > 1){
+				pop @$chromosome;
+			}elsif($rand < 0.32 and $#$chromosome > 1){
+				shift @$chromosome;
+			}elsif($rand < 0.48 and $#$chromosome < $#{$ga->_translations}){
+				push @$chromosome, rand > 0.5 ? 0 : 1;
+			}elsif($rand < 0.64 and $#$chromosome < $#{$ga->_translations}){
+				unshift @$chromosome, rand > 0.5 ? 0 : 1;
+			}elsif($rand < 0.8){
+				tied(@$chromosome)->reverse;
+			}else{
+				my $idx = int rand @$chromosome;
+				$chromosome->[$idx] = $chromosome->[$idx] ? 0 : 1;
+			}
 		}else{
 			my $idx = int rand @$chromosome;
-			$chromosome->[$idx] = $chromosome->[$idx] ? 0 : 1;
+			$chromosome->[$idx] = $chromosome->[$idx] ? 0 : 1;	
 		}
 	}
 	

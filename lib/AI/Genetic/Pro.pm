@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.27;
+$VERSION = 0.28;
 #---------------
 
 use warnings;
@@ -112,9 +112,11 @@ sub init {
 	my $package = get_package_by_element_size($size);
 
 
-	my $length = sub { $#$data; };
-	$length = sub { 1 + int(rand(scalar($#$data))); } if $self->variable_length;
-
+	my $length = ref $data ? sub { $#$data; } : sub { $data - 1 };
+	if($self->variable_length){
+		$length = ref $data ? sub { 1 + int(rand(scalar($#$data))); } : sub { 1 + int(rand($data)); };
+	}
+	
 	$self->chromosomes( [ ] );
 	push @{$self->chromosomes}, 
 		AI::Genetic::Pro::Chromosome->new($self->_translations, $self->type, $package, $length->())
@@ -251,8 +253,9 @@ sub as_array {
 		return $chromosome;
 	}else{
 		my $cnt = 0;
-		return map { $self->_translations->[$cnt++]->[$_] } @$chromosome if wantarray;
-		return \map { $self->_translations->[$cnt++]->[$_] } @$chromosome;
+		my @array = map { $self->_translations->[$cnt++]->[$_] } @$chromosome;
+		return @array if wantarray;
+		return \@array;
 	}
 }
 #=======================================================================

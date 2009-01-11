@@ -16,14 +16,20 @@ sub run {
 	# main loop
 	foreach my $chromosome (@{$ga->{chromosomes}}){
 		next if rand() <= $mutation;
-		my $rand = rand();
-		if($rand < 0.33 and $#$chromosome > 1){
-			pop @$chromosome;
-		}elsif($rand < 0.66 and $#$chromosome < $#{$ga->_translations}){
-			push @$chromosome, random_uniform_integer(1, @{$ga->_translations->[-1]});
+		
+		if($ga->variable_length){
+			my $rand = rand();
+			if($rand < 0.33 and $#$chromosome > 1){
+				pop @$chromosome;
+			}elsif($rand < 0.66 and $#$chromosome < $#{$ga->_translations}){
+				push @$chromosome, random_uniform_integer(1, @{$ga->_translations->[-1]});
+			}else{
+				my $idx = int rand @$chromosome;
+				$chromosome->[$idx] = random_uniform_integer(1, @{$ga->_translations->[$idx]});	
+			}
 		}else{
 			my $idx = int rand @$chromosome;
-			$chromosome->[$idx] = random_uniform_integer(1, @{$ga->_translations->[$idx]});	
+			$chromosome->[$idx] = random_uniform_integer(1, @{$ga->_translations->[$idx]});		
 		}
 	}
 	

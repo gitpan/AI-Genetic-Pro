@@ -18,6 +18,7 @@ sub run {
 	my $const = min values %$fitness;
 	$const = $const < 0 ? abs($const) : 0;
 	my $total = sum( map { $_ < 0 ? $_ + $const : $_ } values %$fitness);
+	$total ||= 1;
 	
 	# elders
 	for my $idx (0..$count){
