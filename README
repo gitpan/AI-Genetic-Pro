@@ -17,19 +17,19 @@ SYNOPSIS
         }
         
     my $ga = AI::Genetic::Pro->new(        
-            -fitness        => \&fitness,        # fitness function
-            -terminate      => \&terminate,      # terminate function
-            -type           => 'bitvector',      # type of individuals/chromosomes
-            -population     => 1000,             # population
-            -crossover      => 0.9,              # probab. of crossover
-            -mutation       => 0.01,             # probab. of mutation
-            -parents        => 2,                # number  of parents
-            -selection      => [ 'Roulette' ],   # selection strategy
-            -strategy       => [ 'Points', 2 ],  # crossover strategy
-            -cache          => 0,                # cache results
-            -history        => 1,                # remember best results
-            -preserved      => 1,                # remember the best chromosome
-            -vriable_length => 1,                # variable-lenght of chromosomes
+            -fitness         => \&fitness,        # fitness function
+            -terminate       => \&terminate,      # terminate function
+            -type            => 'bitvector',      # type of individuals/chromosomes
+            -population      => 1000,             # population
+            -crossover       => 0.9,              # probab. of crossover
+            -mutation        => 0.01,             # probab. of mutation
+            -parents         => 2,                # number  of parents
+            -selection       => [ 'Roulette' ],   # selection strategy
+            -strategy        => [ 'Points', 2 ],  # crossover strategy
+            -cache           => 0,                # cache results
+            -history         => 1,                # remember best results
+            -preserved       => 1,                # remember the best chromosome
+            -variable_length => 1,                # variable length of chromosomes
         );
             
     # init population of 32-bit vectors
@@ -135,7 +135,7 @@ METHODS
                 generation. It causes a little slow down, however (very
                 often) much better results are achieved.
 
-        -vriable_length
+        -variable_length
                 This defines if variable length of chromosomes is allowed.
 
         -parents

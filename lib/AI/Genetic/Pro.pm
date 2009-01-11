@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.26;
+$VERSION = 0.27;
 #---------------
 
 use warnings;
@@ -33,7 +33,7 @@ __PACKAGE__->mk_accessors(qw(
 	_translations
 	generation
 	preserve		
-	vriable_length
+	variable_length
 ));
 #=======================================================================
 # Additional modules
@@ -113,7 +113,7 @@ sub init {
 
 
 	my $length = sub { $#$data; };
-	$length = sub { 1 + int(rand(scalar($#$data))); } if $self->vriable_length;
+	$length = sub { 1 + int(rand(scalar($#$data))); } if $self->variable_length;
 
 	$self->chromosomes( [ ] );
 	push @{$self->chromosomes}, 
@@ -451,19 +451,19 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
     }
     
     my $ga = AI::Genetic::Pro->new(        
-        -fitness        => \&fitness,        # fitness function
-        -terminate      => \&terminate,      # terminate function
-        -type           => 'bitvector',      # type of individuals/chromosomes
-        -population     => 1000,             # population
-        -crossover      => 0.9,              # probab. of crossover
-        -mutation       => 0.01,             # probab. of mutation
-        -parents        => 2,                # number  of parents
-        -selection      => [ 'Roulette' ],   # selection strategy
-        -strategy       => [ 'Points', 2 ],  # crossover strategy
-        -cache          => 0,                # cache results
-        -history        => 1,                # remember best results
-        -preserved      => 1,                # remember the best chromosome
-        -vriable_length	=> 1,				 # variable-lenght of chromosomes
+        -fitness         => \&fitness,        # fitness function
+        -terminate       => \&terminate,      # terminate function
+        -type            => 'bitvector',      # type of individuals/chromosomes
+        -population      => 1000,             # population
+        -crossover       => 0.9,              # probab. of crossover
+        -mutation        => 0.01,             # probab. of mutation
+        -parents         => 2,                # number  of parents
+        -selection       => [ 'Roulette' ],   # selection strategy
+        -strategy        => [ 'Points', 2 ],  # crossover strategy
+        -cache           => 0,                # cache results
+        -history         => 1,                # remember best results
+        -preserved       => 1,                # remember the best chromosome
+        -variable_length => 1,                # variable length of chromosomes
     );
 	
     # init population of 32-bit vectors
@@ -580,7 +580,7 @@ This defines the mutation rate. Fairest results are achieved with mutation rate 
 
 This defines injection of the best chromosome into a next generation. It causes a little slow down, however (very often) much better results are achieved.
 
-=item -vriable_length
+=item -variable_length
 
 This defines if variable length of chromosomes is allowed.
 

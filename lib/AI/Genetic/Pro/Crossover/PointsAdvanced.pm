@@ -24,7 +24,7 @@ sub run {
 	
 		# need some more work on it
 		my $shortest = 0;
-		if($ga->vriable_length){
+		if($ga->variable_length){
 			for my $el(@elders){
 				$shortest = $el if $#{$chromosomes->[$el]} < $#{$chromosomes->[$shortest]};
 			}
