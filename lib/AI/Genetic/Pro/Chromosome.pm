@@ -22,9 +22,9 @@ sub new {
 	}elsif($type eq q/rangevector/){
   		@genes = map { $_->[1] + int rand($_->[2] - $_->[1] + 1) } @$data[0..$length];
 	}else{ 
-		@genes = map { 1 + int(rand $#{ $data->[$_] }) } 0..$length; 
+		@genes = map { 1 + int(rand( $#{ $data->[$_] })) } 0..$length; 
 	}
-	
+
 	return bless \@genes, $class;
 }
 #=======================================================================

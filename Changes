@@ -1,5 +1,8 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.30 Fri, 16 Jan 2009 00:06:29 +0100
+	- Fixes in as_string method.
+
 0.29 Thu, 15 Jan 2009 21:13:15 +0100
 	- Added full support for variable-length chromosomes.
 

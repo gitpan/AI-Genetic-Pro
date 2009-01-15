@@ -2,13 +2,14 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.29;
+$VERSION = 0.30;
 #---------------
 
 use warnings;
 use strict;
 use lib qw(../lib/perl);
 use Carp;
+use Clone qw(clone);
 use List::Util qw(sum);
 use List::MoreUtils qw(minmax first_index);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
@@ -78,19 +79,25 @@ sub _init_cache {
 }
 #=======================================================================
 sub init { 
-	my ($self, $data) = @_;
+	my ($self, $data_org) = @_;
 	
-	croak q/You have to pass some data to "init"!/ unless $data;
+	croak q/You have to pass some data to "init"!/ unless $data_org;
 	#-------------------------------------------------------------------
 	$self->generation(0);
 	$self->_fitness( { } );
 	$self->_history( [  [ ], [ ], [ ] ] );
 	$self->_init_cache if $self->cache;
 	#-------------------------------------------------------------------
+	my $data = clone($data_org);
 	
 	if($self->type eq q/listvector/){
 		croak(q/You have to pass array reference if "type" is set to "listvector"/) unless ref $data eq 'ARRAY';
-		unshift @{$data->[$_]}, undef for 0..$#$data;
+		my $ars;
+		for(0..$#$data){
+			next if $ars->{$data->[$_]};
+			$ars->{$data->[$_]} = 1;
+			unshift @{$data->[$_]}, undef;
+		}
 		$self->_translations( $data );
 	}elsif($self->type eq q/bitvector/){
 		croak(q/You have to pass integer if "type" is set to "bitvector"/) if $data !~ /^\d+$/o;
@@ -102,7 +109,12 @@ sub init {
 		$self->_translations->[$_] = $self->_translations->[0] for 1..$#$data;
 	}elsif($self->type eq q/rangevector/){
 		croak(q/You have to pass array reference if "type" is set to "rangevector"/) unless ref $data eq 'ARRAY';
-		unshift @{$data->[$_]}, undef for 0..$#$data;
+		my $ars;
+		for(0..$#$data){
+			next if $ars->{$data->[$_]};
+			$ars->{$data->[$_]} = 1;
+			unshift @{$data->[$_]}, undef;
+		}
 		$self->_translations( $data );
 	}else{
 		croak(q/You have to specify first "type" of vector!/);
@@ -116,9 +128,9 @@ sub init {
 
 	my $length = ref $data ? sub { $#$data; } : sub { $data - 1 };
 	if($self->variable_length){
-		$length = ref $data ? sub { 1 + int(rand(scalar($#$data))); } : sub { 1 + int(rand($data)); };
+		$length = ref $data ? sub { 1 + int(rand($#$data)); } : sub { 1 + int(rand($data - 1)); };
 	}
-	
+
 	$self->chromosomes( [ ] );
 	push @{$self->chromosomes}, 
 		AI::Genetic::Pro::Chromosome->new($self->_translations, $self->type, $package, $length->())
@@ -282,7 +294,6 @@ sub as_array {
 	}else{
 		my $cnt = 0;
 		my @array = map { $self->_translations->[$cnt++]->[$_] } @$chromosome;
-		
 		return @array if wantarray;
 		return \@array;
 	}
@@ -302,7 +313,7 @@ sub as_string_def_only {
 #=======================================================================
 sub as_string {	
 	return join(q//, @{$_[1]}) if $_[0]->type eq q/bitvector/;
-	return join(q/___/, map { $_ ? $_ : q/ / } $_[0]->as_array($_[1]));
+	return 	join(q/___/, map { defined $_ ? $_ : q/ / } $_[0]->as_array($_[1]));
 }
 #=======================================================================
 sub as_value { 
