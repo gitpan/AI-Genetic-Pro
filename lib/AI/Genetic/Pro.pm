@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.28;
+$VERSION = 0.29;
 #---------------
 
 use warnings;
@@ -90,6 +90,7 @@ sub init {
 	
 	if($self->type eq q/listvector/){
 		croak(q/You have to pass array reference if "type" is set to "listvector"/) unless ref $data eq 'ARRAY';
+		unshift @{$data->[$_]}, undef for 0..$#$data;
 		$self->_translations( $data );
 	}elsif($self->type eq q/bitvector/){
 		croak(q/You have to pass integer if "type" is set to "bitvector"/) if $data !~ /^\d+$/o;
@@ -100,7 +101,8 @@ sub init {
 		$self->_translations( [ $data ] );
 		$self->_translations->[$_] = $self->_translations->[0] for 1..$#$data;
 	}elsif($self->type eq q/rangevector/){
-		croak(q/You have to pass array reference if "type" is set to "listvector"/) unless ref $data eq 'ARRAY';
+		croak(q/You have to pass array reference if "type" is set to "rangevector"/) unless ref $data eq 'ARRAY';
+		unshift @{$data->[$_]}, undef for 0..$#$data;
 		$self->_translations( $data );
 	}else{
 		croak(q/You have to specify first "type" of vector!/);
@@ -245,23 +247,62 @@ sub chart {
 #=======================================================================
 # TRANSLATIONS #########################################################
 #=======================================================================
-sub as_array {
+sub as_array_def_only {
 	my ($self, $chromosome) = @_;
 	
-	if($self->type eq q/bitvector/ or $self->type eq q/rangevector/){
-		return @$chromosome if wantarray;
-		return $chromosome;
+	return $self->as_array($chromosome) 
+		if $self->variable_length and $self->variable_length > 1;
+	
+	if( $self->type eq q/bitvector/ ){
+		return $self->as_array($chromosome);
 	}else{
-		my $cnt = 0;
-		my @array = map { $self->_translations->[$cnt++]->[$_] } @$chromosome;
+		my $ar = $self->as_array($chromosome);
+		my $idx = first_index { $_ } @$chromosome;
+		my @array = @$chromosome[$idx..$#$chromosome];
 		return @array if wantarray;
 		return \@array;
 	}
 }
 #=======================================================================
+sub as_array {
+	my ($self, $chromosome) = @_;
+	
+	if($self->type eq q/bitvector/){
+		return @$chromosome if wantarray;
+		return $chromosome;
+	}elsif($self->type eq q/rangevector/){
+		my @array = @$chromosome;
+		my $idx = first_index { $_ } @array;
+		if($idx != -1){ 
+			$array[$_] = undef for 0..$idx;
+		}
+		
+		return @array if wantarray;
+		return \@array;
+	}else{
+		my $cnt = 0;
+		my @array = map { $self->_translations->[$cnt++]->[$_] } @$chromosome;
+		
+		return @array if wantarray;
+		return \@array;
+	}
+}
+#=======================================================================
+sub as_string_def_only {	
+	my ($self, $chromosome) = @_;
+	
+	return $self->as_string($chromosome) 
+		if $self->variable_length and $self->variable_length > 1;
+	
+	my $array = $self->as_array_def_only($chromosome);
+	
+	return join(q//, @$array) if $self->type eq q/bitvector/;
+	return join(q/___/, @$array);
+}
+#=======================================================================
 sub as_string {	
 	return join(q//, @{$_[1]}) if $_[0]->type eq q/bitvector/;
-	return join(q/___/, $_[0]->as_array($_[1]));
+	return join(q/___/, map { $_ ? $_ : q/ / } $_[0]->as_array($_[1]));
 }
 #=======================================================================
 sub as_value { 
@@ -456,7 +497,7 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
     my $ga = AI::Genetic::Pro->new(        
         -fitness         => \&fitness,        # fitness function
         -terminate       => \&terminate,      # terminate function
-        -type            => 'bitvector',      # type of individuals/chromosomes
+        -type            => 'bitvector',      # type of chromosomes
         -population      => 1000,             # population
         -crossover       => 0.9,              # probab. of crossover
         -mutation        => 0.01,             # probab. of mutation
@@ -465,8 +506,8 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
         -strategy        => [ 'Points', 2 ],  # crossover strategy
         -cache           => 0,                # cache results
         -history         => 1,                # remember best results
-        -preserved       => 1,                # remember the best chromosome
-        -variable_length => 1,                # variable length of chromosomes
+        -preserved       => 1,                # remember the best
+        -variable_length => 1,                # turn variable length ON
     );
 	
     # init population of 32-bit vectors
@@ -585,7 +626,58 @@ This defines injection of the best chromosome into a next generation. It causes 
 
 =item -variable_length
 
-This defines if variable length of chromosomes is allowed.
+This defines if variable-length chromosomes are turned on (default off) and a type of allowed mutations. See below.
+
+=over 8
+
+=item level 0
+
+Feature is inactive (default). Example:
+
+	-variable_length => 0
+	
+    # chromosomes (i.e. bitvectors)
+    0 1 0 0 1 1 0 1 1 1 0 1 0 1
+    0 0 1 1 0 1 1 1 1 0 0 1 1 0
+    0 1 1 1 0 1 0 0 1 1 0 1 1 1
+    0 1 0 0 1 1 0 1 1 1 1 0 1 0
+    # ...and so on
+
+=item level 1 
+
+Feature is active, but chromosomes can varies B<only on the right side>, Example:
+
+	-variable_length => 1
+	
+    # chromosomes (i.e. bitvectors)
+    0 1 0 0 1 1 0 1 1 1 
+    0 0 1 1 0 1 1 1 1
+    0 1 1 1 0 1 0 0 1 1 0 1 1 1
+    0 1 0 0 1 1 0 1 1 1
+    # ...and so on
+	
+=item level 2 
+
+Feature is active and chromosomes can varies B<on the left side and on 
+the right side>; unwanted values/genes on the left side are replaced with C<undef>, ie.
+ 
+	-variable_length => 2
+ 
+    # chromosomes (i.e. bitvectors)
+    x x x 0 1 1 0 1 1 1 
+    x x x x 0 1 1 1 1
+    x 1 1 1 0 1 0 0 1 1 0 1 1 1
+    0 1 0 0 1 1 0 1 1 1
+    # where 'x' means 'undef'
+    # ...and so on
+
+In this situation returned chromosomes in an array context ($ga-E<gt>as_array($chromosome)) 
+can have B<undef> values on the left side (only). In a scalar context each 
+undefined value is replaced with a single space. If You don't want to see
+any C<undef> or space, just use C<as_array_def_only> and C<as_string_def_only> 
+instead of C<as_array> and C<as_string>.
+
+=back
 
 =item -parents  
 
@@ -1023,16 +1115,76 @@ Load a state of the genetic algorithm from a specified file.
 
 =item I<$ga>-E<gt>B<as_array>($chromosome)
 
-Return an array representing specified chromosome.
+In an array context return an array representing specified chromosome. 
+In a scalar context return an reference to an array representing specified 
+chromosome. If I<variable_length> is turned on and is set to level 2, an array 
+can have some C<undef> values. To get only C<not undef> values use 
+C<as_array_def_only> instead of C<as_array>.
+
+=item I<$ga>-E<gt>B<as_array_def_only>($chromosome)
+
+In an array context return an array representing specified chromosome. 
+In a scalar context return an reference to an array representing specified 
+chromosome. If I<variable_length> is turned off, this function is just 
+alias for C<as_array>. If I<variable_length> is turned on and is set to 
+level 2, this function will return only C<not undef> values from chromosome. 
+See example below:
+
+	# -variable_length => 2, -type => 'bitvector'
+	
+	my @chromosome = $ga->as_array($chromosome)
+	# @chromosome looks something like that
+	# ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
+	
+	
+	@chromosome = $ga->as_array_def_only($chromosome)
+	# @chromosome looks something like that
+	# ( 1, 0, 1, 1, 1, 0 )
+
+=item I<$ga>-E<gt>B<as_string>($chromosome)
+
+Return string-representation of specified chromosome. See example below:
+
+	# -type => 'bitvector'
+	
+	my $string = $ga->as_string($chromosome);
+	# $string looks something like that
+	# 1___0___1___1___1___0 
+	
+	# or 
+	
+	# -type => 'listvector'
+	
+	$string = $ga->as_string($chromosome);
+	# $string looks something like that
+	# element0___element1___element2___element3...
+
+Attention! If I<variable_length> is turned on and is set to level 2, it is 
+possible to get C<undef> values on the left side of the vector. In returned
+string C<undef> values will be replaced with B<spaces>. If You don't want
+to see any I<spaces>, use C<as_string_def_only> instead of C<as_string>.
+
+=item I<$ga>-E<gt>B<as_string_def_only>($chromosome)
+
+Return string-representation of specified chromosome. If I<variable_length> 
+is turned off, this function is just alias for C<as_string>. If I<variable_length> 
+is turned on and is set to level 2, this function will return string without
+C<undef> values. See example below:
+
+	# -variable_length => 2, -type => 'bitvector'
+	
+	my $string = $ga->as_string($chromosome);
+	# $string looks something like that
+	#  ___ ___ ___1___1___0 
+	
+	$string = $ga->as_string_def_only($chromosome);
+	# $string looks something like that
+	# 1___1___0 
 
 =item I<$ga>-E<gt>B<as_value>($chromosome)
 
 Return score of specified chromosome. Value of I<chromosome> is 
 calculated by fitness function.
-
-=item I<$ga>-E<gt>B<as_string>($chromosome)
-
-Return string-representation of specified chromosome. 
 
 =back
 

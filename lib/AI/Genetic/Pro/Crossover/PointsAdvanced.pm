@@ -3,6 +3,7 @@ package AI::Genetic::Pro::Crossover::PointsAdvanced;
 use warnings;
 use strict;
 use Clone qw( clone );
+use List::MoreUtils qw(first_index);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #use AI::Genetic::Pro::Array::PackTemplate;
 #=======================================================================
@@ -22,15 +23,21 @@ sub run {
 			next;
 		}
 	
-		# need some more work on it
-		my $shortest = 0;
+		my ($min, $max) = (0, $#{$chromosomes->[0]} - 1);
 		if($ga->variable_length){
 			for my $el(@elders){
-				$shortest = $el if $#{$chromosomes->[$el]} < $#{$chromosomes->[$shortest]};
+				my $idx = first_index { $_ } @{$chromosomes->[$el]};
+				$min = $idx if $idx > $min;
+				$max = $#{$chromosomes->[$el]} if $#{$chromosomes->[$el]} < $max;
 			}
 		}
-	
-		my @points = map { 1+ int(rand $#{$chromosomes->[$shortest]}) } 1..$self->{points};
+		
+		my @points;
+		if($min < $max and $max - $min > 2){
+			my $range = $max - $min;
+			@points = map { $min + int(rand $range) } 1..$self->{points};
+		}
+
 		@elders = map { clone($chromosomes->[$_]) } @elders;
 		for my $pt(@points){
 			@elders = sort {

@@ -20,9 +20,9 @@ sub new {
 		#@genes = shuffle 0..$#{$data->[0]}; 
 		@genes = shuffle 0..$length; 
 	}elsif($type eq q/rangevector/){
-  		@genes = map { $_->[0] + int rand($_->[1] - $_->[0] + 1) } @$data[0..$length];
+  		@genes = map { $_->[1] + int rand($_->[2] - $_->[1] + 1) } @$data[0..$length];
 	}else{ 
-		@genes = map { int(rand @{ $data->[$_] }) } 0..$length; 
+		@genes = map { 1 + int(rand $#{ $data->[$_] }) } 0..$length; 
 	}
 	
 	return bless \@genes, $class;

@@ -19,7 +19,7 @@ SYNOPSIS
     my $ga = AI::Genetic::Pro->new(        
             -fitness         => \&fitness,        # fitness function
             -terminate       => \&terminate,      # terminate function
-            -type            => 'bitvector',      # type of individuals/chromosomes
+            -type            => 'bitvector',      # type of chromosomes
             -population      => 1000,             # population
             -crossover       => 0.9,              # probab. of crossover
             -mutation        => 0.01,             # probab. of mutation
@@ -28,8 +28,8 @@ SYNOPSIS
             -strategy        => [ 'Points', 2 ],  # crossover strategy
             -cache           => 0,                # cache results
             -history         => 1,                # remember best results
-            -preserved       => 1,                # remember the best chromosome
-            -variable_length => 1,                # variable length of chromosomes
+            -preserved       => 1,                # remember the best
+            -variable_length => 1,                # turn variable length ON
         );
             
     # init population of 32-bit vectors
@@ -136,7 +136,55 @@ METHODS
                 often) much better results are achieved.
 
         -variable_length
-                This defines if variable length of chromosomes is allowed.
+                This defines if variable-length chromosomes are turned on
+                (default off) and a type of allowed mutations. See below.
+
+                level 0 Feature is inactive (default). Example:
+
+                                -variable_length => 0
+                                
+    # chromosomes (i.e. bitvectors)
+                            0 1 0 0 1 1 0 1 1 1 0 1 0 1
+                            0 0 1 1 0 1 1 1 1 0 0 1 1 0
+                            0 1 1 1 0 1 0 0 1 1 0 1 1 1
+                            0 1 0 0 1 1 0 1 1 1 1 0 1 0
+                            # ...and so on
+
+                level 1 Feature is active, but chromosomes can varies only
+                        on the right side, Example:
+
+                                -variable_length => 1
+                                
+    # chromosomes (i.e. bitvectors)
+                            0 1 0 0 1 1 0 1 1 1 
+                            0 0 1 1 0 1 1 1 1
+                            0 1 1 1 0 1 0 0 1 1 0 1 1 1
+                            0 1 0 0 1 1 0 1 1 1
+                            # ...and so on
+
+                level 2 Feature is active and chromosomes can varies on the
+                        left side and on the right side; unwanted
+                        values/genes on the left side are replaced with
+                        "undef", ie.
+
+                                -variable_length => 2
+                         
+    # chromosomes (i.e. bitvectors)
+                            x x x 0 1 1 0 1 1 1 
+                            x x x x 0 1 1 1 1
+                            x 1 1 1 0 1 0 0 1 1 0 1 1 1
+                            0 1 0 0 1 1 0 1 1 1
+                            # where 'x' means 'undef'
+                            # ...and so on
+
+                        In this situation returned chromosomes in an array
+                        context ($ga->as_array($chromosome)) can have undef
+                        values on the left side (only). In a scalar context
+                        each undefined value is replaced with a single
+                        space. If You don't want to see any "undef" or
+                        space, just use "as_array_def_only" and
+                        "as_string_def_only" instead of "as_array" and
+                        "as_string".
 
         -parents
                 This defines how many parents should used in corssover.
@@ -557,14 +605,77 @@ METHODS
         Load a state of the genetic algorithm from a specified file.
 
     *$ga*->as_array($chromosome)
-        Return an array representing specified chromosome.
+        In an array context return an array representing specified
+        chromosome. In a scalar context return an reference to an array
+        representing specified chromosome. If *variable_length* is turned on
+        and is set to level 2, an array can have some "undef" values. To get
+        only "not undef" values use "as_array_def_only" instead of
+        "as_array".
+
+    *$ga*->as_array_def_only($chromosome)
+        In an array context return an array representing specified
+        chromosome. In a scalar context return an reference to an array
+        representing specified chromosome. If *variable_length* is turned
+        off, this function is just alias for "as_array". If
+        *variable_length* is turned on and is set to level 2, this function
+        will return only "not undef" values from chromosome. See example
+        below:
+
+                # -variable_length => 2, -type => 'bitvector'
+                
+        my @chromosome = $ga->as_array($chromosome)
+                # @chromosome looks something like that
+                # ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
+                
+        
+        @chromosome = $ga->as_array_def_only($chromosome)
+                # @chromosome looks something like that
+                # ( 1, 0, 1, 1, 1, 0 )
+
+    *$ga*->as_string($chromosome)
+        Return string-representation of specified chromosome. See example
+        below:
+
+                # -type => 'bitvector'
+                
+        my $string = $ga->as_string($chromosome);
+                # $string looks something like that
+                # 1___0___1___1___1___0 
+                
+        # or 
+                
+        # -type => 'listvector'
+                
+        $string = $ga->as_string($chromosome);
+                # $string looks something like that
+                # element0___element1___element2___element3...
+
+        Attention! If *variable_length* is turned on and is set to level 2,
+        it is possible to get "undef" values on the left side of the vector.
+        In returned string "undef" values will be replaced with spaces. If
+        You don't want to see any *spaces*, use "as_string_def_only" instead
+        of "as_string".
+
+    *$ga*->as_string_def_only($chromosome)
+        Return string-representation of specified chromosome. If
+        *variable_length* is turned off, this function is just alias for
+        "as_string". If *variable_length* is turned on and is set to level
+        2, this function will return string without "undef" values. See
+        example below:
+
+                # -variable_length => 2, -type => 'bitvector'
+                
+        my $string = $ga->as_string($chromosome);
+                # $string looks something like that
+                #  ___ ___ ___1___1___0 
+                
+        $string = $ga->as_string_def_only($chromosome);
+                # $string looks something like that
+                # 1___1___0
 
     *$ga*->as_value($chromosome)
         Return score of specified chromosome. Value of *chromosome* is
         calculated by fitness function.
-
-    *$ga*->as_string($chromosome)
-        Return string-representation of specified chromosome.
 
 DOCUMENTATION
     This documentation is still incomplete, however it is based on POD of

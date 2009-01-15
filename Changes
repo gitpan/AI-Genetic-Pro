@@ -1,5 +1,14 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.29 Thu, 15 Jan 2009 21:13:15 +0100
+	- Added full support for variable-length chromosomes.
+
+0.28
+	- Little fixes. Again :-)
+	
+0.27
+	- Little fixes.
+
 0.26 Sun, 11 Jan 2009 22:04:26 +0100
 	- Little modifications in crossover.
 	- Added supprot for variable-length chromosomes. Thanks to Leonid Zamdborg :-)

@@ -13,6 +13,7 @@ use Math::Random qw(
 	random_exponential
 	random_poisson
 );
+use List::MoreUtils qw(first_index);
 #=======================================================================
 sub new { 
 	my ($class, $type, @params) = @_;
@@ -67,9 +68,19 @@ sub run {
 			die qq/Unknown distribution "$self->{type}" in "crossover"!\n/;
 		}
 		
+		#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		my ($min, $max) = (0, $#{$chromosomes->[0]} - 1);
+		if($ga->variable_length){
+			for my $el(@elders){
+				my $idx = first_index { $_ } @{$chromosomes->[$el]};
+				$min = $idx if $idx > $min;
+				$max = $#{$chromosomes->[$el]} if $#{$chromosomes->[$el]} < $max;
+			}
+		}
+		
 		$elders[0] = clone($chromosomes->[$elders[0]]);
 		for(0..$#seq){
-			next unless $seq[$_];
+			next if not $seq[$_] or $_ < $min or $_ > $max;
 			$elders[0]->[$_] = $chromosomes->[$elders[$seq[$_]]]->[$_];
 		}
 		#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
