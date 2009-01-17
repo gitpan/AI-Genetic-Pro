@@ -1,5 +1,8 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.31 Sat, 17 Jan 2009 20:32:27 +0100
+	- Fixes in mutation. Added changing of fitness for mutated chromosomes.
+
 0.30 Fri, 16 Jan 2009 00:06:29 +0100
 	- Fixes in as_string method.
 

@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.30;
+$VERSION = 0.31;
 #---------------
 
 use warnings;
@@ -27,7 +27,7 @@ __PACKAGE__->mk_accessors(qw(
 	parents 		_parents 
 	history 		_history
 	fitness 		_fitness 		_fitness_real
-	cache   		_cache
+	cache
 	mutation 		_mutator
 	strategy 		_strategist
 	selection 		_selector 
@@ -57,6 +57,8 @@ sub new {
 	
 	return $self;
 }
+#=======================================================================
+sub _cache { $_Cache; }
 #=======================================================================
 # INIT #################################################################
 #=======================================================================
@@ -427,6 +429,8 @@ sub evolve {
 			$self->_mutation();
 		}
 	}else{
+		croak('You cannot preserve more chromosomes than is in population!') if $self->preserve > $self->population;
+		my @preserved;
 		for(my $i = 0; $i != $generations; $i++){
 			# terminate ----------------------------------------------------
 			last if $self->terminate and $self->terminate->($self);
@@ -435,7 +439,7 @@ sub evolve {
 			# update history -----------------------------------------------
 			$self->_save_history;
 			#---------------------------------------------------------------
-			my $preserved = ($self->getFittest)[0] if $self->preserve;
+			@preserved = map { clone($_) } $self->getFittest($self->preserve - 1);
 			# selection ----------------------------------------------------
 			$self->_select_parents();
 			# crossover ----------------------------------------------------
@@ -443,8 +447,10 @@ sub evolve {
 			# mutation -----------------------------------------------------
 			$self->_mutation();
 			#---------------------------------------------------------------
-			$self->chromosomes->[$#{$self->chromosomes}] = $preserved;
-			$self->_fitness->{$#{$self->chromosomes}} = $self->fitness()->($self, $preserved);
+			for(@preserved){
+				push @{$self->chromosomes}, $_;
+				$self->_fitness->{$#{$self->chromosomes}} = $self->fitness()->($self, $_);
+			}
 		}
 	}
 }
@@ -517,7 +523,7 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
         -strategy        => [ 'Points', 2 ],  # crossover strategy
         -cache           => 0,                # cache results
         -history         => 1,                # remember best results
-        -preserved       => 1,                # remember the best
+        -preserve        => 3,                # remember the bests
         -variable_length => 1,                # turn variable length ON
     );
 	
@@ -633,7 +639,14 @@ This defines the mutation rate. Fairest results are achieved with mutation rate 
 
 =item -preserve
 
-This defines injection of the best chromosome into a next generation. It causes a little slow down, however (very often) much better results are achieved.
+This defines injection of the bests chromosomes into a next generation. It causes a little slow down, however (very often) much better results are achieved. You can specify, how many chromosomes will be preserved, i.e.
+
+    -preserve => 1, # only one chromosome will be preserved
+    # or
+    -preserve => 9, # 9 chromosomes will be preserved
+    # and so on...
+
+Attention! You cannot preserve more chromosomes, than Your population consists.
 
 =item -variable_length
 
@@ -1231,7 +1244,7 @@ A small script which yields the problem will probably be of help.
 
 =head1 THANKS
 
-Leonid Zamdborg for recommending the addition of variable-length chromosomes as well as supplying relevant code samples.
+Leonid Zamdborg for recommending the addition of variable-length chromosomes as well as supplying relevant code samples, for testing and at the end reporting some bugs.
 
 Christoph Meissner for reporting a bug.
 

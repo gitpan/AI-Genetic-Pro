@@ -10,21 +10,31 @@ sub new { bless \$_[0], $_[0]; }
 sub run {
 	my ($self, $ga) = @_;
 
-	my $mut = $ga->mutation; # this is declared here just for speed
-	my $inv = $mut / 2;
+	# this is declared here just for speed
+	my $mutation = $ga->mutation;
+	my $chromosomes = $ga->chromosomes;
+	my $_translations = $ga->_translations;
+	my ($fitness, $_fitness) = ($ga->fitness, $ga->_fitness);
+	my $inv = $mutation / 2;
 	
 	# main loop
-	foreach my $chromosome (@{$ga->{chromosomes}}){
+	for my $idx (0..$#$chromosomes){
+		
 		my $rand = rand;
-		if($rand < $inv) { tied(@$chromosome)->reverse; }
-		elsif(rand() < $mut){
-			my $idx = int rand @$chromosome;
-			my $new = int rand @{$ga->_translations->[0]};
-			next if $new == $chromosome->[$idx];
-			my $id = first_index { $_ == $new } @$chromosome;
-			$chromosome->[$id] = $chromosome->[$idx] if defined $id and $id != -1;
-			$chromosome->[$idx] = $new;
+		
+		if($rand < $inv) { tied(@{$chromosomes->[$idx]})->reverse; }
+		elsif($rand < $mutation){
+			my $el = int rand @{$chromosomes->[$idx]};
+			my $new = int rand @{$_translations->[0]};
+			next if $new == $chromosomes->[$idx]->[$el];
+			
+			my $id = first_index { $_ == $new } @{$chromosomes->[$idx]};
+			$chromosomes->[$idx]->[$id] = $chromosomes->[$idx]->[$el] if defined $id and $id != -1;
+			$chromosomes->[$idx]->[$el] = $new;
 		}
+		
+		# we need to change fitness
+		$_fitness->{$idx} = $fitness->($ga, $chromosomes->[$idx]);
 	}
 	
 	return 1;

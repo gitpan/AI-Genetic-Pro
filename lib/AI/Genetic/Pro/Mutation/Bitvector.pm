@@ -11,30 +11,36 @@ sub run {
 
 	# this is declared here just for speed
 	my $mutation = $ga->mutation;
+	my $chromosomes = $ga->chromosomes;
+	my $_translations = $ga->_translations;
+	my ($fitness, $_fitness) = ($ga->fitness, $ga->_fitness);
 	
 	# main loop
-	foreach my $chromosome (@{$ga->{chromosomes}}){
+	for my $idx (0..$#$chromosomes){
 		next if rand() >= $mutation;
+		
 		if($ga->variable_length){
 			my $rand = rand();
-			if($rand < 0.16 and $#$chromosome > 1){
-				pop @$chromosome;
-			}elsif($rand < 0.32 and $#$chromosome > 1){
-				shift @$chromosome;
-			}elsif($rand < 0.48 and $#$chromosome < $#{$ga->_translations}){
-				push @$chromosome, rand > 0.5 ? 0 : 1;
-			}elsif($rand < 0.64 and $#$chromosome < $#{$ga->_translations}){
-				unshift @$chromosome, rand > 0.5 ? 0 : 1;
+			if($rand < 0.16 and $#{$chromosomes->[$idx]} > 1){
+				pop @{$chromosomes->[$idx]};
+			}elsif($rand < 0.32 and $#{$chromosomes->[$idx]} > 1){
+				shift @{$chromosomes->[$idx]};
+			}elsif($rand < 0.48 and $#{$chromosomes->[$idx]} < $#$_translations){
+				push @{$chromosomes->[$idx]}, rand > 0.5 ? 0 : 1;
+			}elsif($rand < 0.64 and $#{$chromosomes->[$idx]} < $#$_translations){
+				unshift @{$chromosomes->[$idx]}, rand > 0.5 ? 0 : 1;
 			}elsif($rand < 0.8){
-				tied(@$chromosome)->reverse;
+				tied(@{$chromosomes->[$idx]})->reverse;
 			}else{
-				my $idx = int rand @$chromosome;
-				$chromosome->[$idx] = $chromosome->[$idx] ? 0 : 1;
+				my $id = int rand @{$chromosomes->[$idx]};
+				$chromosomes->[$idx]->[$id] = $chromosomes->[$idx]->[$id] ? 0 : 1;
 			}
 		}else{
-			my $idx = int rand @$chromosome;
-			$chromosome->[$idx] = $chromosome->[$idx] ? 0 : 1;	
+			my $id = int rand @{$chromosomes->[$idx]};
+			$chromosomes->[$idx]->[$id] = $chromosomes->[$idx]->[$id] ? 0 : 1;	
 		}
+		# we need to change fitness
+		$_fitness->{$idx} = $fitness->($ga, $chromosomes->[$idx]);
 	}
 	
 	return 1;

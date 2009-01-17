@@ -28,7 +28,7 @@ SYNOPSIS
             -strategy        => [ 'Points', 2 ],  # crossover strategy
             -cache           => 0,                # cache results
             -history         => 1,                # remember best results
-            -preserved       => 1,                # remember the best
+            -preserve        => 3,                # remember the bests
             -variable_length => 1,                # turn variable length ON
         );
             
@@ -131,9 +131,18 @@ METHODS
                 with mutation rate ~0.01.
 
         -preserve
-                This defines injection of the best chromosome into a next
+                This defines injection of the bests chromosomes into a next
                 generation. It causes a little slow down, however (very
-                often) much better results are achieved.
+                often) much better results are achieved. You can specify,
+                how many chromosomes will be preserved, i.e.
+
+                    -preserve => 1, # only one chromosome will be preserved
+                    # or
+                    -preserve => 9, # 9 chromosomes will be preserved
+                    # and so on...
+
+                Attention! You cannot preserve more chromosomes, than Your
+                population consists.
 
         -variable_length
                 This defines if variable-length chromosomes are turned on
@@ -701,7 +710,8 @@ REPORTING BUGS
 
 THANKS
     Leonid Zamdborg for recommending the addition of variable-length
-    chromosomes as well as supplying relevant code samples.
+    chromosomes as well as supplying relevant code samples, for testing and
+    at the end reporting some bugs.
 
     Christoph Meissner for reporting a bug.
 
