@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.31;
+$VERSION = 0.32;
 #---------------
 
 use warnings;
@@ -11,8 +11,8 @@ use lib qw(../lib/perl);
 use Carp;
 use Clone qw(clone);
 use List::Util qw(sum);
-use List::MoreUtils qw(minmax first_index);
-#use Data::Dumper; $Data::Dumper::Sortkeys = 1;
+use List::MoreUtils qw(minmax first_index apply);
+use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use UNIVERSAL::require;
 use AI::Genetic::Pro::Array::Type qw(get_package_by_element_size);
 use AI::Genetic::Pro::Chromosome;
@@ -35,6 +35,7 @@ __PACKAGE__->mk_accessors(qw(
 	generation
 	preserve		
 	variable_length
+	_fix_range
 ));
 #=======================================================================
 # Additional modules
@@ -80,44 +81,61 @@ sub _init_cache {
 	return;
 }
 #=======================================================================
-sub init { 
+sub _check_data_ref {
 	my ($self, $data_org) = @_;
+	my $data = clone($data_org);
+	my $ars;
+	for(0..$#$data){
+		next if $ars->{$data->[$_]};
+		$ars->{$data->[$_]} = 1;
+		unshift @{$data->[$_]}, undef;
+	}
+	return $data;
+}
+#=======================================================================
+# we have to find C to (in some cases) incrase value of range
+# due to design model
+sub _find_fix_range {
+	my ($self, $data) = @_;
+
+	for my $idx (0..$#$data){
+		if($data->[$idx]->[1] < 1){ 
+			my $const = 1 - $data->[$idx]->[1];
+			push @{$self->_fix_range}, $const; 
+			$data->[$idx]->[1] += $const;
+			$data->[$idx]->[2] += $const;
+		}else{ push @{$self->_fix_range}, 0; }
+	}
+
+	return $data;
+}
+#=======================================================================
+sub init { 
+	my ($self, $data) = @_;
 	
-	croak q/You have to pass some data to "init"!/ unless $data_org;
+	croak q/You have to pass some data to "init"!/ unless $data;
 	#-------------------------------------------------------------------
 	$self->generation(0);
 	$self->_fitness( { } );
+	$self->_fix_range( [ ] );
 	$self->_history( [  [ ], [ ], [ ] ] );
 	$self->_init_cache if $self->cache;
 	#-------------------------------------------------------------------
-	my $data = clone($data_org);
 	
 	if($self->type eq q/listvector/){
 		croak(q/You have to pass array reference if "type" is set to "listvector"/) unless ref $data eq 'ARRAY';
-		my $ars;
-		for(0..$#$data){
-			next if $ars->{$data->[$_]};
-			$ars->{$data->[$_]} = 1;
-			unshift @{$data->[$_]}, undef;
-		}
-		$self->_translations( $data );
+		$self->_translations( $self->_check_data_ref($data) );
 	}elsif($self->type eq q/bitvector/){
 		croak(q/You have to pass integer if "type" is set to "bitvector"/) if $data !~ /^\d+$/o;
 		$self->_translations( [ [ 0, 1 ] ] );
 		$self->_translations->[$_] = $self->_translations->[0] for 1..$data-1;
 	}elsif($self->type eq q/combination/){
 		croak(q/You have to pass array reference if "type" is set to "combination"/) unless ref $data eq 'ARRAY';
-		$self->_translations( [ $data ] );
+		$self->_translations( [ clone($data) ] );
 		$self->_translations->[$_] = $self->_translations->[0] for 1..$#$data;
 	}elsif($self->type eq q/rangevector/){
 		croak(q/You have to pass array reference if "type" is set to "rangevector"/) unless ref $data eq 'ARRAY';
-		my $ars;
-		for(0..$#$data){
-			next if $ars->{$data->[$_]};
-			$ars->{$data->[$_]} = 1;
-			unshift @{$data->[$_]}, undef;
-		}
-		$self->_translations( $data );
+		$self->_translations( $self->_find_fix_range( $self->_check_data_ref($data) ));
 	}else{
 		croak(q/You have to specify first "type" of vector!/);
 	}
@@ -137,7 +155,7 @@ sub init {
 	push @{$self->chromosomes}, 
 		AI::Genetic::Pro::Chromosome->new($self->_translations, $self->type, $package, $length->())
 			for 1..$self->population;
-			
+	
 	$self->_calculate_fitness_all();
 }
 #=======================================================================
@@ -265,14 +283,14 @@ sub as_array_def_only {
 	my ($self, $chromosome) = @_;
 	
 	return $self->as_array($chromosome) 
-		if $self->variable_length and $self->variable_length > 1;
+		if not $self->variable_length or $self->variable_length < 2;
 	
 	if( $self->type eq q/bitvector/ ){
 		return $self->as_array($chromosome);
 	}else{
 		my $ar = $self->as_array($chromosome);
-		my $idx = first_index { $_ } @$chromosome;
-		my @array = @$chromosome[$idx..$#$chromosome];
+		my $idx = first_index { $_ } @$ar;
+		my @array = @$ar[$idx..$#$chromosome];
 		return @array if wantarray;
 		return \@array;
 	}
@@ -285,11 +303,10 @@ sub as_array {
 		return @$chromosome if wantarray;
 		return $chromosome;
 	}elsif($self->type eq q/rangevector/){
-		my @array = @$chromosome;
-		my $idx = first_index { $_ } @array;
-		if($idx != -1){ 
-			$array[$_] = undef for 0..$idx;
-		}
+		my $fix_range = $self->_fix_range;
+		my $c = -1;
+		#my @array = map { $c++; warn "WARN: $c | ",scalar @$chromosome,"\n" if not defined $fix_range->[$c]; $_ ? $_ - $fix_range->[$c] : undef } @$chromosome;
+		my @array = map { $c++; $_ ? $_ - $fix_range->[$c] : undef } @$chromosome;
 		
 		return @array if wantarray;
 		return \@array;
@@ -305,8 +322,8 @@ sub as_string_def_only {
 	my ($self, $chromosome) = @_;
 	
 	return $self->as_string($chromosome) 
-		if $self->variable_length and $self->variable_length > 1;
-	
+		if not $self->variable_length or $self->variable_length < 2;
+
 	my $array = $self->as_array_def_only($chromosome);
 	
 	return join(q//, @$array) if $self->type eq q/bitvector/;
@@ -448,8 +465,9 @@ sub evolve {
 			$self->_mutation();
 			#---------------------------------------------------------------
 			for(@preserved){
-				push @{$self->chromosomes}, $_;
-				$self->_fitness->{$#{$self->chromosomes}} = $self->fitness()->($self, $_);
+				my $idx = int rand @{$self->chromosomes};
+				$self->chromosomes->[$idx] = $_;
+				$self->_fitness->{$idx} = $self->fitness()->($self, $_);
 			}
 		}
 	}
@@ -1212,15 +1230,9 @@ calculated by fitness function.
 
 =back
 
-=head1 DOCUMENTATION
-
-This documentation is still incomplete, however it is based on POD of L<AI::Genetic>.
-So if You are in a trouble, try to take a look to the documentation of L<AI::Genetic>.
-
 =head1 SUPPORT
 
-C<AI::Genetic::Pro> is still under development and it has poor 
-documentation (for now). However it is used in many production environments.
+C<AI::Genetic::Pro> is still under development, however it is used in many production environments.
 
 =head1 TODO
 
