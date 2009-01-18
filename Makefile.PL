@@ -8,6 +8,7 @@ WriteMakefile(
     PREREQ_PM     => {
         'UNIVERSAL::require'		=> 0,
         'Carp'						=> 0,
+		'Struct::Compare'			=> 0,
         'Exporter::Lite'			=> 0,
         'Tie::Array::Packed'		=> 0,
 		'List::Util'				=> 0,

@@ -24,7 +24,7 @@ sub run {
 			next;
 		}
 
-		my ($min, $max) = (0, $#{$chromosomes->[0]} - 1);
+		my ($min, $max) = (0, $#{$chromosomes->[0]});
 		if($ga->variable_length){
 			for my $el(@elders){
 				my $idx = first_index { $_ } @{$chromosomes->[$el]};

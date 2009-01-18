@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.32;
+$VERSION = 0.33;
 #---------------
 
 use warnings;
@@ -10,9 +10,10 @@ use strict;
 use lib qw(../lib/perl);
 use Carp;
 use Clone qw(clone);
+use Struct::Compare;
 use List::Util qw(sum);
 use List::MoreUtils qw(minmax first_index apply);
-use Data::Dumper; $Data::Dumper::Sortkeys = 1;
+#use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use UNIVERSAL::require;
 use AI::Genetic::Pro::Array::Type qw(get_package_by_element_size);
 use AI::Genetic::Pro::Chromosome;
@@ -36,6 +37,7 @@ __PACKAGE__->mk_accessors(qw(
 	preserve		
 	variable_length
 	_fix_range
+	_package
 ));
 #=======================================================================
 # Additional modules
@@ -44,6 +46,7 @@ use constant GD 		=> 'GD::Graph::linespoints';
 use constant MD			=> 'Digest::MD5';
 #=======================================================================
 my $_Cache = { };
+my $_temp_chromosome;
 #=======================================================================
 sub new {
 	my $class = shift;
@@ -56,12 +59,28 @@ sub new {
 	croak(q/Strategy cannot be "/,$self->strategy,q/" if "vriable length" feature is active!/ )
 		if $self->strategy eq 'PMX' or $self->strategy eq 'OX' and $self->variable_length;
 	
+	$self->_set_strict if $self->{strict};
+	
 	return $self;
 }
 #=======================================================================
-sub _cache { $_Cache; }
+sub _Cache { $_Cache; }
 #=======================================================================
 # INIT #################################################################
+#=======================================================================
+sub _set_strict {
+	my ($self) = @_;
+	
+	# fitness
+	my $fitness = $self->fitness();
+	my $replacement = sub {
+		my @tmp = @{$_[1]};
+		my $ret = $fitness->(@_);
+		my @cmp = @{$_[1]};
+		die qq/Chromosome was modified in a fitness function from "@tmp" to "@{$_[1]}"!\n/ unless compare(\@tmp, \@cmp);
+	};
+	$self->fitness($replacement);
+}
 #=======================================================================
 sub _fitness_cached {
 	my ($self, $chromosome) = @_;
@@ -144,6 +163,7 @@ sub init {
 	if($self->type ne q/rangevector/){ for(@{$self->_translations}){ $size = $#$_ if $#$_ > $size; } }
 	else{ for(@{$self->_translations}){ $size = $_->[1] if $_->[1] > $size; } }
 	my $package = get_package_by_element_size($size);
+	$self->_package($package);
 
 
 	my $length = ref $data ? sub { $#$data; } : sub { $data - 1 };
@@ -341,7 +361,7 @@ sub as_value {
 		unless defined $_[0] and ref $_[0] and ref $_[0] eq 'AI::Genetic::Pro';
 	croak(q/You MUST pass 'AI::Genetic::Pro::Chromosome' object to 'as_value' method./) 
 		unless defined $_[1] and ref $_[1] and ref $_[1] eq 'AI::Genetic::Pro::Chromosome';
-	return $self->fitness()->($self, $chromosome);  
+	return $self->fitness->($self, $chromosome);  
 }
 #=======================================================================
 # ALGORITHM ############################################################
@@ -352,18 +372,19 @@ sub _calculate_fitness_all {
 	$self->_fitness( { } );
 	$self->_fitness->{$_} = $self->fitness()->($self, $self->chromosomes->[$_]) 
 		for 0..$#{$self->chromosomes};
-	
-	my (@chromosomes, %fitness);
-	for my $idx (sort { $self->_fitness->{$a} <=> $self->_fitness->{$b} } keys %{$self->_fitness}){
-		push @chromosomes, $self->chromosomes->[$idx];
-		$fitness{$#chromosomes} = $self->_fitness->{$idx};
-		delete $self->_fitness->{$idx};
-		delete $self->chromosomes->[$idx];
-	}
-	
-	$self->_fitness(\%fitness);
-	$self->chromosomes(\@chromosomes);
-		
+
+# sorting the population is not necessary	
+#	my (@chromosomes, %fitness);
+#	for my $idx (sort { $self->_fitness->{$a} <=> $self->_fitness->{$b} } keys %{$self->_fitness}){
+#		push @chromosomes, $self->chromosomes->[$idx];
+#		$fitness{$#chromosomes} = $self->_fitness->{$idx};
+#		delete $self->_fitness->{$idx};
+#		delete $self->chromosomes->[$idx];
+#	}
+#	
+#	$self->_fitness(\%fitness);
+#	$self->chromosomes(\@chromosomes);
+
 	return;
 }
 #=======================================================================
@@ -420,6 +441,16 @@ sub _save_history {
 	push @{$_[0]->_history->[0]}, $tmp[0]; 
 	push @{$_[0]->_history->[1]}, $tmp[1];
 	push @{$_[0]->_history->[2]}, $tmp[2];
+	return 1;
+}
+#=======================================================================
+sub inject {
+	my ($self, $candidates) = @_;
+	
+	push @{$self->chromosomes}, 
+		AI::Genetic::Pro::Chromosome->new_from_data($self->_translations, $self->type, $self->_package, $_, $self->_fix_range)
+			for @$candidates;
+	
 	return 1;
 }
 #=======================================================================
@@ -635,7 +666,10 @@ Each gene of a "listvector" individual/chromosome can assume one string value fr
 
 =item rangevector
 
-Each gene of a "rangevector" individual/chromosome can assume one integer value from a range of possible integer values. Note that only integers are supported. The user can always transform any desired fractional values by multiplying and dividing by an appropriate power of 10.
+Each gene of a "rangevector" individual/chromosome can assume one integer 
+value from a range of possible integer values. Note that only integers 
+are supported. The user can always transform any desired fractional values 
+by multiplying and dividing by an appropriate power of 10.
 
 =item combination
 
@@ -936,7 +970,35 @@ This defines if history should be collected. Correct values are: 1 or 0 (default
 
 Collect history.
 
+=item -strict
+
+This defined if check for modifing chromosomes in a fitness (user defined) 
+function is active. Direct modifing chromosomes is not allowed and it is 
+a highway to big troubles. This mode should be used only for testing, becouse it is B<slow>.
+
 =back
+
+=item I<$ga>-E<gt>B<inject>($chromosomes)
+
+Inject new, user defined, chromosomes into a current population. See example below:
+
+    # example for bitvector
+    my $chromosomes = [
+        [ 1, 1, 0, 1, 0, 1 ],
+        [ 0, 0, 0, 1, 0, 1 ],
+        [ 0, 1, 0, 1, 0, 0 ],
+        ...
+    ];
+    
+    # inject
+    $ga->inject($chromosomes);
+
+If You want to delete some chromosomes form population, just C<splice> them:
+
+    my @remove = qw(1 2 3 9 12);
+    for my $idx (@remove){
+        splice @{$ga->chromosomes}, $idx, 1;
+    }
 
 =item I<$ga>-E<gt>B<population>($population)
 
@@ -1172,12 +1234,11 @@ alias for C<as_array>. If I<variable_length> is turned on and is set to
 level 2, this function will return only C<not undef> values from chromosome. 
 See example below:
 
-	# -variable_length => 2, -type => 'bitvector'
+    # -variable_length => 2, -type => 'bitvector'
 	
-	my @chromosome = $ga->as_array($chromosome)
-	# @chromosome looks something like that
-	# ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
-	
+    my @chromosome = $ga->as_array($chromosome)
+    # @chromosome looks something like that
+    # ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
 	
 	@chromosome = $ga->as_array_def_only($chromosome)
 	# @chromosome looks something like that
@@ -1256,7 +1317,7 @@ A small script which yields the problem will probably be of help.
 
 =head1 THANKS
 
-Leonid Zamdborg for recommending the addition of variable-length chromosomes as well as supplying relevant code samples, for testing and at the end reporting some bugs.
+LEONID ZAMDBORG for recommending the addition of variable-length chromosomes as well as supplying relevant code samples, for testing and at the end reporting some bugs.
 
 Christoph Meissner for reporting a bug.
 

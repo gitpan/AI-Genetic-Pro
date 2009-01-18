@@ -32,17 +32,17 @@ sub run {
 				else{ pop @{$chromosomes->[$idx]};	}
 			}elsif($rand < 0.8 and $range < scalar @{$_translations}){
 				if($rand < 0.6 and $ga->variable_length > 1 and not $chromosomes->[$idx]->[0]){
-					$chromosomes->[$idx]->[ $min - 1 ] = 1 + random_uniform_integer(1, @{$_translations->[ $min - 1 ]}[1..2]);
+					$chromosomes->[$idx]->[ $min - 1 ] = random_uniform_integer(1, @{$_translations->[ $min - 1 ]}[1..2]);
 				}elsif(exists $_translations->[scalar @{$chromosomes->[$idx]}]){
-					push @{$chromosomes->[$idx]}, 1 + random_uniform_integer(1, @{$_translations->[scalar @{$chromosomes->[$idx]}]}[1..2]);	
+					push @{$chromosomes->[$idx]}, random_uniform_integer(1, @{$_translations->[scalar @{$chromosomes->[$idx]}]}[1..2]);	
 				}
 			}else{
 				my $id = $min + int rand($range - 1);
-				$chromosomes->[$idx]->[$id] = 1 + random_uniform_integer(1, @{$_translations->[$id]}[1..2]);	
+				$chromosomes->[$idx]->[$id] = random_uniform_integer(1, @{$_translations->[$id]}[1..2]);	
 			}
 		}else{
 			my $id = int rand @{$chromosomes->[$idx]};
-			$chromosomes->[$idx]->[$id] = 1 + random_uniform_integer(1, @{$_translations->[$id]}[1..2]);	
+			$chromosomes->[$idx]->[$id] = random_uniform_integer(1, @{$_translations->[$id]}[1..2]);	
 		}
 		
 		# we need to change fitness

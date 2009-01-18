@@ -417,6 +417,35 @@ METHODS
 
                 Collect history.
 
+        -strict This defined if check for modifing chromosomes in a fitness
+                (user defined) function is active. Direct modifing
+                chromosomes is not allowed and it is a highway to big
+                troubles. This mode should be used only for testing, becouse
+                it is slow.
+
+    *$ga*->inject($chromosomes)
+        Inject new, user defined, chromosomes into a current population. See
+        example below:
+
+            # example for bitvector
+            my $chromosomes = [
+                [ 1, 1, 0, 1, 0, 1 ],
+                [ 0, 0, 0, 1, 0, 1 ],
+                [ 0, 1, 0, 1, 0, 0 ],
+                ...
+            ];
+            
+    # inject
+            $ga->inject($chromosomes);
+
+        If You want to delete some chromosomes form population, just
+        "splice" them:
+
+            my @remove = qw(1 2 3 9 12);
+            for my $idx (@remove){
+                splice @{$ga->chromosomes}, $idx, 1;
+            }
+
     *$ga*->population($population)
         Set/get size of the population. This defines the size of the
         population, i.e. how many chromosomes to simultaneously exist at
@@ -630,13 +659,12 @@ METHODS
         will return only "not undef" values from chromosome. See example
         below:
 
-                # -variable_length => 2, -type => 'bitvector'
+            # -variable_length => 2, -type => 'bitvector'
                 
-        my @chromosome = $ga->as_array($chromosome)
-                # @chromosome looks something like that
-                # ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
+    my @chromosome = $ga->as_array($chromosome)
+            # @chromosome looks something like that
+            # ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
                 
-        
         @chromosome = $ga->as_array_def_only($chromosome)
                 # @chromosome looks something like that
                 # ( 1, 0, 1, 1, 1, 0 )
@@ -686,15 +714,9 @@ METHODS
         Return score of specified chromosome. Value of *chromosome* is
         calculated by fitness function.
 
-DOCUMENTATION
-    This documentation is still incomplete, however it is based on POD of
-    AI::Genetic. So if You are in a trouble, try to take a look to the
-    documentation of AI::Genetic.
-
 SUPPORT
-    "AI::Genetic::Pro" is still under development and it has poor
-    documentation (for now). However it is used in many production
-    environments.
+    "AI::Genetic::Pro" is still under development, however it is used in
+    many production environments.
 
 TODO
     Examples.
@@ -709,7 +731,7 @@ REPORTING BUGS
     A small script which yields the problem will probably be of help.
 
 THANKS
-    Leonid Zamdborg for recommending the addition of variable-length
+    LEONID ZAMDBORG for recommending the addition of variable-length
     chromosomes as well as supplying relevant code samples, for testing and
     at the end reporting some bugs.
 
