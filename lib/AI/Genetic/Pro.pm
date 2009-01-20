@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.33;
+$VERSION = 0.331;
 #---------------
 
 use warnings;
@@ -38,6 +38,7 @@ __PACKAGE__->mk_accessors(qw(
 	variable_length
 	_fix_range
 	_package
+	strict			_strict
 ));
 #=======================================================================
 # Additional modules
@@ -59,7 +60,7 @@ sub new {
 	croak(q/Strategy cannot be "/,$self->strategy,q/" if "vriable length" feature is active!/ )
 		if $self->strategy eq 'PMX' or $self->strategy eq 'OX' and $self->variable_length;
 	
-	$self->_set_strict if $self->{strict};
+	$self->_set_strict if $self->strict;
 	
 	return $self;
 }
@@ -78,6 +79,7 @@ sub _set_strict {
 		my $ret = $fitness->(@_);
 		my @cmp = @{$_[1]};
 		die qq/Chromosome was modified in a fitness function from "@tmp" to "@{$_[1]}"!\n/ unless compare(\@tmp, \@cmp);
+		return $ret;
 	};
 	$self->fitness($replacement);
 }
@@ -447,10 +449,14 @@ sub _save_history {
 sub inject {
 	my ($self, $candidates) = @_;
 	
-	push @{$self->chromosomes}, 
-		AI::Genetic::Pro::Chromosome->new_from_data($self->_translations, $self->type, $self->_package, $_, $self->_fix_range)
-			for @$candidates;
-	
+	for(@$candidates){
+		push @{$self->chromosomes}, 
+			AI::Genetic::Pro::Chromosome->new_from_data($self->_translations, $self->type, $self->_package, $_, $self->_fix_range);
+		$self->_fitness->{$#{$self->chromosomes}} = $self->fitness()->($self, $self->chromosomes->[-1]);
+
+	}			
+	$self->_strict( [ ] );
+
 	return 1;
 }
 #=======================================================================
@@ -459,7 +465,16 @@ sub evolve {
 
 	# generations must be defined
 	$generations ||= -1; 	 
-		
+	
+	if($self->strict and $self->_strict){
+		for my $idx (0..$#{$self->chromosomes}){
+			croak(q/Chromosomes was modified outside the 'evolve' function!/) unless $self->chromosomes->[$idx] and $self->_strict->[$idx];
+			my @tmp0 = @{$self->chromosomes->[$idx]};
+			my @tmp1 = @{$self->_strict->[$idx]};
+			croak(qq/Chromosome was modified outside the 'evolve' function from "@tmp0" to "@tmp1"!/) unless compare(\@tmp0, \@tmp1);
+		}
+	}
+	
 	# split into two loops just for speed
 	unless($self->preserve){
 		for(my $i = 0; $i != $generations; $i++){
@@ -501,6 +516,11 @@ sub evolve {
 				$self->_fitness->{$idx} = $self->fitness()->($self, $_);
 			}
 		}
+	}
+	
+	if($self->strict){
+		$self->_strict( [ ] );
+		push @{$self->_strict}, clone($_) for @{$self->chromosomes};
 	}
 }
 #=======================================================================
