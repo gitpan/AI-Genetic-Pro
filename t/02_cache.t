@@ -4,8 +4,7 @@ use warnings;
 use FindBin qw($Bin);
 use lib $Bin;
 use Test::More qw(no_plan);
-use Clone qw(clone);
-use Struct::Compare;
+use Time::HiRes;
 use AI::Genetic::Pro;
 
 use constant BITS => 32;
@@ -28,7 +27,7 @@ my $ga = AI::Genetic::Pro->new(
         -fitness         => \&fitness,        # fitness function
         -terminate       => sub { return; },  # terminate function
         -type            => 'bitvector',      # type of chromosomes
-        -population      => 1000,             # population
+        -population      => 10,               # population
         -crossover       => 0.9,              # probab. of crossover
         -mutation        => 0.05,             # probab. of mutation
         -parents         => 2,                # number  of parents
@@ -42,16 +41,18 @@ my $ga = AI::Genetic::Pro->new(
 
 # init population of 32-bit vectors
 $ga->init(BITS);
-my $start = time;
-$ga->evolve(100);
-my $time0 = time() - $start;
+$ga->chromosomes( [ ] );
+$ga->inject( [ [ qw( 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1) ] ] );
+my $start = [Time::HiRes::gettimeofday()];
+$ga->as_value($ga->chromosomes->[0]) for 0..10000;
+my $time0 =Time::HiRes::tv_interval($start);
 
 
 $ga = AI::Genetic::Pro->new(        
         -fitness         => \&fitness,        # fitness function
         -terminate       => sub { return; },  # terminate function
         -type            => 'bitvector',      # type of chromosomes
-        -population      => 1000,             # population
+        -population      => 10,               # population
         -crossover       => 0.9,              # probab. of crossover
         -mutation        => 0.05,             # probab. of mutation
         -parents         => 2,                # number  of parents
@@ -65,9 +66,11 @@ $ga = AI::Genetic::Pro->new(
 
 # init population of 32-bit vectors
 $ga->init(BITS);
-$start = time;
-$ga->evolve(100);
+$ga->chromosomes( [ ] );
+$ga->inject( [ [ qw( 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1) ] ] );
+$start = [Time::HiRes::gettimeofday()];
+$ga->as_value($ga->chromosomes->[0]) for 0..10000;
+my $time1 =Time::HiRes::tv_interval($start);
 
-my $time1 = time() - $start;
 ok( $time0 >= $time1 );
 

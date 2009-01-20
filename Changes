@@ -1,5 +1,12 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.332 Wed, 21 Jan 2009 00:31:01 +0100
+	- Some changes in tests.
+
+0.331 Tue, 20 Jan 2009 23:55:20 +0100
+	- Added tests.
+	- Some improvments in the 'inject' function.
+
 0.33 Mon, 19 Jan 2009 00:38:06 +0100
 	- Added 'strict' mode.
 	- Added 'inject' function.
