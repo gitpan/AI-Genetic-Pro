@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.332;
+$VERSION = 0.333;
 #---------------
 
 use warnings;
@@ -502,7 +502,8 @@ sub evolve {
 			# update history -----------------------------------------------
 			$self->_save_history;
 			#---------------------------------------------------------------
-			@preserved = map { clone($_) } $self->getFittest($self->preserve - 1);
+			# preservation of N unique chromosomes
+			@preserved = map { clone($_) } @{ $self->getFittest_as_arrayref($self->preserve - 1, 1) };
 			# selection ----------------------------------------------------
 			$self->_select_parents();
 			# crossover ----------------------------------------------------
@@ -538,15 +539,32 @@ sub intType { shift->type() }
 #=======================================================================
 # STATS ################################################################
 #=======================================================================
-sub getFittest {
-	my ($self, $n) = @_;
-	$n ||= 0;
+sub getFittest_as_arrayref { 
+	my ($self, $n, $uniq) = @_;
+	$n ||= 1;
 	
 	$self->_calculate_fitness_all() unless scalar %{ $self->_fitness };
 	my @keys = sort { $self->_fitness->{$a} <=> $self->_fitness->{$b} } 0..$#{$self->chromosomes};
 	
-	return reverse @{$self->chromosomes}[ splice @keys, $#keys - $n, scalar @keys];
+	if($uniq){
+		my %grep;
+		my $chromosomes = $self->chromosomes;
+		@keys = grep { 
+				my $add_to_list = 0;
+				my $key = md5_hex(${tied(@{$chromosomes->[$_]})});
+				unless($grep{$key}) { 
+					$grep{$key} = 1; 
+					$add_to_list = 1;
+				}
+				$add_to_list;
+			} @keys;
+	}
+	
+	$n = scalar @keys if $n > scalar @keys;
+	return [ reverse @{$self->chromosomes}[ splice @keys, $#keys - $n + 1, $n ] ];
 }
+#=======================================================================
+sub getFittest { return wantarray ? @{ shift->getFittest_as_arrayref(@_) } : shift @{ shift->getFittest_as_arrayref(@_) }; }
 #=======================================================================
 sub getAvgFitness {
 	my ($self) = @_;
@@ -630,7 +648,7 @@ If You are looking for pure Perl solution, consider L<AI::Genetic>.
 
 =item Speed
 
-To increase speed XS code are used, however with portability in 
+To increase speed XS code is used, however with portability in 
 mind. This distribution was tested on Windows and Linux platforms 
 (should work on any other).
 
@@ -777,7 +795,7 @@ instead of C<as_array> and C<as_string>.
 
 =item -parents  
 
-This defines how many parents should used in corssover.
+This defines how many parents should be used in a corssover.
 
 =item -selection
 
@@ -1070,7 +1088,7 @@ This method is used to query and set the mutation rate.
 
 =item I<$ga>-E<gt>B<mutation>()
 
-Alias for C<mutation>.
+Alias for C<mutProb>.
 
 =item I<$ga>-E<gt>B<parents>($parents)
 
@@ -1129,7 +1147,7 @@ This initializes a population where each chromosome has 3 genes and each gene is
 
 =back
 
-=item I<$ga>-E<gt>B<evolve>()
+=item I<$ga>-E<gt>B<evolve>($n)
 
 This method causes the GA to evolve the population for the specified number of generations. If its argument is 0 or C<undef> GA will evolve the population to infinity unless terminate function is specified.
 
@@ -1150,9 +1168,28 @@ Get I<max>, I<mean> and I<min> score of the current generation. In example:
 
     my ($max, $mean, $min) = $ga->getAvgFitness();
 
-=item I<$ga>-E<gt>B<getFittest>()
+=item I<$ga>-E<gt>B<getFittest>($n, $unique)
 
-Get fittest chromosome.
+This function returns list of fittests chromosomes from the current population. 
+You can specify: how many chromosomes should be returned and if returned 
+chromosomes should be unique. See example below.
+
+    # only one - the best
+    my ($best) = $ga->getFittest;
+
+    # or 5 bests chromosomes, NOT unique
+    my @bests = $ga->getFittest(5);
+
+    # or 7 bests and UNIQUE chromosomes
+    my @bests = $ga->getFittest(7, 1);
+
+If You want to get a big number of chromosomes, try to use C<getFittest_as_arrayref>
+function instead (for efficiency).
+
+=item I<$ga>-E<gt>B<getFittest_as_arrayref>($n, $unique)
+
+This function is very similar to C<getFittest>, but it returns reference 
+to an array instead of a list. 
 
 =item I<$ga>-E<gt>B<generation>()
 
@@ -1162,7 +1199,8 @@ Get number of generation.
 
 Returns an anonymous list of individuals/chromosomes of the current population. 
 
-B<IMPORTANT:> the actual array reference used by the C<AI::Genetic::Pro> object is returned, so any changes to it will be reflected in I<$ga>.
+B<IMPORTANT:> the actual array reference used by the C<AI::Genetic::Pro> 
+object is returned, so any changes to it will be reflected in I<$ga>.
 
 =item I<$ga>-E<gt>B<chromosomes>()
 
@@ -1260,9 +1298,9 @@ See example below:
     # @chromosome looks something like that
     # ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
 	
-	@chromosome = $ga->as_array_def_only($chromosome)
-	# @chromosome looks something like that
-	# ( 1, 0, 1, 1, 1, 0 )
+    @chromosome = $ga->as_array_def_only($chromosome)
+    # @chromosome looks something like that
+    # ( 1, 0, 1, 1, 1, 0 )
 
 =item I<$ga>-E<gt>B<as_string>($chromosome)
 

@@ -51,14 +51,22 @@ my $ga = AI::Genetic::Pro->new(
 # init population of 32-bit vectors
 $ga->init(BITS);
 
-$ga->inject( [ \@Win, \@Win, \@Win, \@Win ] );
+my @Win0 = @Win; $Win0[-1] = 0;
+my @Win1 = @Win; $Win1[-2] = 0;
+my @Win2 = @Win; $Win2[-1] = 0; $Win2[-2] = 0;
 
-# evolve 1000 generations
+$ga->inject( [ \@Win, \@Win0, \@Win1, \@Win2 ] );
 $ga->evolve(1);
 
 my $count = 0;
-for(@{$ga->chromosomes}){
-	$count++ if $ga->as_value($_) == $Win; 
+for my $w (\@Win, \@Win0, \@Win1, \@Win2){
+	my $s = $ga->as_string($w);
+	foreach my $c (@{$ga->chromosomes}){
+		if($ga->as_string($c) eq $s){
+			$count++;
+			last;
+		}
+	}
 }
 
-ok($count >= 4);
+ok($count == 4);
