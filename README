@@ -63,9 +63,9 @@ DESCRIPTION
     If You are looking for pure Perl solution, consider AI::Genetic.
 
     Speed
-        To increase speed XS code are used, however with portability in
-        mind. This distribution was tested on Windows and Linux platforms
-        (should work on any other).
+        To increase speed XS code is used, however with portability in mind.
+        This distribution was tested on Windows and Linux platforms (should
+        work on any other).
 
     Memory
         This module was designed to use as little memory as possible.
@@ -196,7 +196,7 @@ METHODS
                         "as_string".
 
         -parents
-                This defines how many parents should used in corssover.
+                This defines how many parents should be used in a corssover.
 
         -selection
                 This defines how individuals/chromosomes are selected to
@@ -488,7 +488,7 @@ METHODS
         This method is used to query and set the mutation rate.
 
     *$ga*->mutation()
-        Alias for "mutation".
+        Alias for "mutProb".
 
     *$ga*->parents($parents)
         Set/get number of parents in a crossover.
@@ -554,7 +554,7 @@ METHODS
                 [ 'b', 'c', 'a' ]    # gene 3
                 # ...and so on...
 
-    *$ga*->evolve()
+    *$ga*->evolve($n)
         This method causes the GA to evolve the population for the specified
         number of generations. If its argument is 0 or "undef" GA will
         evolve the population to infinity unless terminate function is
@@ -576,8 +576,26 @@ METHODS
 
             my ($max, $mean, $min) = $ga->getAvgFitness();
 
-    *$ga*->getFittest()
-        Get fittest chromosome.
+    *$ga*->getFittest($n, $unique)
+        This function returns list of fittests chromosomes from the current
+        population. You can specify: how many chromosomes should be returned
+        and if returned chromosomes should be unique. See example below.
+
+            # only one - the best
+            my ($best) = $ga->getFittest;
+
+            # or 5 bests chromosomes, NOT unique
+            my @bests = $ga->getFittest(5);
+
+            # or 7 bests and UNIQUE chromosomes
+            my @bests = $ga->getFittest(7, 1);
+
+        If You want to get a big number of chromosomes, try to use
+        "getFittest_as_arrayref" function instead (for efficiency).
+
+    *$ga*->getFittest_as_arrayref($n, $unique)
+        This function is very similar to "getFittest", but it returns
+        reference to an array instead of a list.
 
     *$ga*->generation()
         Get number of generation.
@@ -665,9 +683,9 @@ METHODS
             # @chromosome looks something like that
             # ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
                 
-        @chromosome = $ga->as_array_def_only($chromosome)
-                # @chromosome looks something like that
-                # ( 1, 0, 1, 1, 1, 0 )
+    @chromosome = $ga->as_array_def_only($chromosome)
+            # @chromosome looks something like that
+            # ( 1, 0, 1, 1, 1, 0 )
 
     *$ga*->as_string($chromosome)
         Return string-representation of specified chromosome. See example

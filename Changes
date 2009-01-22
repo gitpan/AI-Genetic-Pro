@@ -1,5 +1,12 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.334 Fri, 23 Jan 2009 00:03:26 +0100
+	- Module 'Digest::MD5' is loaded by default,
+
+0.333 Fri, 22 Jan 2009 15:30:06 +0100
+	- Some improvments in 'getFittest' function,
+	- Added 'getFittest_as_arrayref' function,
+
 0.332 Wed, 21 Jan 2009 00:31:01 +0100
 	- Some changes in tests.
 

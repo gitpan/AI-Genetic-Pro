@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.333;
+$VERSION = 0.334;
 #---------------
 
 use warnings;
@@ -11,6 +11,7 @@ use lib qw(../lib/perl);
 use Carp;
 use Clone qw(clone);
 use Struct::Compare;
+use Digest::MD5 qw(md5_hex);
 use List::Util qw(sum);
 use List::MoreUtils qw(minmax first_index apply);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
@@ -44,7 +45,6 @@ __PACKAGE__->mk_accessors(qw(
 # Additional modules
 use constant STORABLE	=> 'Storable';
 use constant GD 		=> 'GD::Graph::linespoints'; 
-use constant MD			=> 'Digest::MD5';
 #=======================================================================
 my $_Cache = { };
 my $_temp_chromosome;
@@ -94,9 +94,7 @@ sub _fitness_cached {
 #=======================================================================
 sub _init_cache {
 	my ($self) = @_;
-	
-	MD->use(qw(md5_hex)) or croak(q/You need "/.MD.q/" module to use cache!/);
-	
+		
 	$self->_fitness_real($self->fitness);
 	$self->fitness(\&_fitness_cached);
 	return;
