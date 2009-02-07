@@ -1,5 +1,8 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.335 Sat, 07 Feb 2009 20:04:52 +0100
+	- Little changes in a Makefile.PL (especially for Sun Solaris)
+
 0.334 Fri, 23 Jan 2009 00:03:26 +0100
 	- Module 'Digest::MD5' is loaded by default,
 

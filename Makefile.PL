@@ -1,7 +1,7 @@
 use ExtUtils::MakeMaker;
 WriteMakefile(
     'NAME'	=> 'AI::Genetic::Pro',
-    AUTHOR        => '£ukasz Strzelecki <strzelec@rswsystems.pl>',
+    AUTHOR        => 'Lukasz Strzelecki <strzelec@rswsystems.pl>',
     VERSION_FROM  => 'lib/AI/Genetic/Pro.pm',
     ABSTRACT_FROM => 'lib/AI/Genetic/Pro.pm',
     PL_FILES      => {},
