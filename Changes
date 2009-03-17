@@ -1,5 +1,8 @@
 Revision history for Perl extension AI::Genetic::Pro.
 
+0.34  Tue, 17 Mar 2009 20:39:16 +0100 
+	- Fixed bug in PMX strategy. Thanks to Maciej Misiak :-)
+
 0.335 Sat, 07 Feb 2009 20:04:52 +0100
 	- Little changes in a Makefile.PL (especially for Sun Solaris)
 

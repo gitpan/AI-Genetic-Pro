@@ -749,6 +749,9 @@ REPORTING BUGS
     A small script which yields the problem will probably be of help.
 
 THANKS
+    Maciej Misiak for reporting problems with "combination" (and a bug in a
+    PMX strategy).
+
     LEONID ZAMDBORG for recommending the addition of variable-length
     chromosomes as well as supplying relevant code samples, for testing and
     at the end reporting some bugs.
@@ -761,7 +764,7 @@ AUTHOR
     Strzelecki Lukasz <strzelec@rswsystems.com>
 
 SEE ALSO
-    AI::Genetic
+    AI::Genetic Algorithm::Evolutionary
 
 COPYRIGHT
     Copyright (c) Strzelecki Lukasz. All rights reserved. This program is

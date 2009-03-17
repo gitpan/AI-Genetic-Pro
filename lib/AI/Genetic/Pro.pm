@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.334;
+$VERSION = 0.34;
 #---------------
 
 use warnings;
@@ -57,8 +57,11 @@ sub new {
 	
 	croak(q/Type of chromosomes cannot be "combination" if "vriable length" feature is active!/)
 		if $self->type eq q/combination/ and $self->variable_length;
-	croak(q/Strategy cannot be "/,$self->strategy,q/" if "vriable length" feature is active!/ )
-		if $self->strategy eq 'PMX' or $self->strategy eq 'OX' and $self->variable_length;
+	croak(q/Type of chromosomes cannot be "combination" if strategy is not one of: OX, PMX!/)
+		if $self->type eq q/combination/ and ($self->strategy->[0] ne q/OX/ and $self->strategy->[0] ne q/PMX/);
+	croak(q/Strategy cannot be "/,$self->strategy->[0],q/" if "vriable length" feature is active!/ )
+		if ($self->strategy->[0] eq 'PMX' or $self->strategy->[0] eq 'OX') and $self->variable_length;
+		
 	
 	$self->_set_strict if $self->strict;
 	
@@ -1373,6 +1376,8 @@ A small script which yields the problem will probably be of help.
 
 =head1 THANKS
 
+Maciej Misiak for reporting problems with C<combination> (and a bug in a PMX strategy).
+
 LEONID ZAMDBORG for recommending the addition of variable-length chromosomes as well as supplying relevant code samples, for testing and at the end reporting some bugs.
 
 Christoph Meissner for reporting a bug.
@@ -1386,6 +1391,7 @@ Strzelecki Lukasz <strzelec@rswsystems.com>
 =head1 SEE ALSO
 
 L<AI::Genetic>
+L<Algorithm::Evolutionary>
 
 =head1 COPYRIGHT
 

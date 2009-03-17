@@ -3,15 +3,18 @@ package AI::Genetic::Pro::Crossover::PMX;
 use warnings;
 use strict;
 use Clone qw( clone );
-use List::MoreUtils qw(first_index);
+use List::MoreUtils qw(indexes);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }
 #=======================================================================
-sub save_fitness {
-	my ($self, $ga, $idx) = @_;
-	$ga->_fitness->{$idx} = $ga->fitness->($ga, $ga->chromosomes->[$idx]);
-	return $ga->chromosomes->[$idx];
+sub dup {
+    my ($ar) = @_;
+
+    my %seen;
+    my @dup = grep { if($seen{$_}){ 1 }else{ $seen{$_} = 1; 0} } @$ar;
+    return \@dup if @dup;
+    return;
 }
 #=======================================================================
 sub run {
@@ -33,19 +36,26 @@ sub run {
 		
 		@elders = sort {
 					my @av = @{$a}[$points[0]..$points[1]-1];
-					#for my $element(@av){
-					#	for my $idx($points[0]..$points[1]-1){
-					#		return 0 if $b->[$idx] == $element;
-					#	}
-					#}
-					
 					my @bv = splice @$b, $points[0], $points[1] - $points[0], @av;
+					splice @$a, $points[0], $points[1] - $points[0], @bv;
 					
-					for my $idx(0..$#av){
-						$a->[ first_index { $_ == $bv[$idx] } @$a ] = $av[$idx];
-						$b->[ first_index { $_ == $av[$idx] } @$b ] = $bv[$idx];
+					my %av; @av{@av} = @bv;
+					my %bv; @bv{@bv} = @av;
+
+					while(my $dup = dup($a)){
+    					foreach my $val (@$dup){
+        					my ($ind) = grep { $_ < $points[0] or $_ >= $points[1] } indexes { $_ == $val } @$a;
+        					$a->[$ind] = $bv{$val};
+    					}
 					}
-					#splice @$b, 0, $pt, splice( @$a, 0, $pt, @$b[0..$pt-1] );
+
+					while(my $dup = dup($b)){
+    					foreach my $val (@$dup){
+        					my ($ind) = grep { $_ < $points[0] or $_ >= $points[1] } indexes { $_ == $val } @$b;
+        					$b->[$ind] = $av{$val};
+    					}
+					}
+					
 					0;
 						} map { 
 							clone($chromosomes->[$_])

@@ -32,13 +32,13 @@ sub terminate {
 my $ga = AI::Genetic::Pro->new(        
         -fitness         => \&fitness,        # fitness function
         -terminate       => \&terminate,      # terminate function
-        -type            => 'combination',      # type of chromosomes
+        -type            => 'combination',    # type of chromosomes
         -population      => 100,              # population
         -crossover       => 0.9,              # probab. of crossover
         -mutation        => 0.05,             # probab. of mutation
         -parents         => 2,                # number  of parents
         -selection       => [ 'Roulette' ],   # selection strategy
-        -strategy        => [ 'Points', 2 ],  # crossover strategy
+        -strategy        => [ 'PMX' ],        # crossover strategy
         -cache           => 1,                # cache results
         -history         => 0,                # remember best results
         -preserve        => 0,                # remember the bests
