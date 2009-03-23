@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.34;
+$VERSION = 0.341;
 #---------------
 
 use warnings;
@@ -1035,7 +1035,7 @@ Inject new, user defined, chromosomes into a current population. See example bel
 If You want to delete some chromosomes form population, just C<splice> them:
 
     my @remove = qw(1 2 3 9 12);
-    for my $idx (@remove){
+	for my $idx (sort { $b <=> $a }  @remove){
         splice @{$ga->chromosomes}, $idx, 1;
     }
 
@@ -1375,6 +1375,8 @@ is different.
 A small script which yields the problem will probably be of help. 
 
 =head1 THANKS
+
+Randal L. Schwartz for reporting a bug in this documentation.
 
 Maciej Misiak for reporting problems with C<combination> (and a bug in a PMX strategy).
 
