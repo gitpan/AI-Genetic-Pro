@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.341;
+$VERSION = 0.342;
 #---------------
 
 use warnings;
@@ -163,11 +163,13 @@ sub init {
 	}
 	
 	my $size = 0;
+
 	if($self->type ne q/rangevector/){ for(@{$self->_translations}){ $size = $#$_ if $#$_ > $size; } }
-	else{ for(@{$self->_translations}){ $size = $_->[1] if $_->[1] > $size; } }
+#	else{ for(@{$self->_translations}){ $size = $_->[1] if $_->[1] > $size; } }
+	else{ for(@{$self->_translations}){ $size = $_->[2] if $_->[2] > $size; } }		# Provisional patch for rangevector values truncated to signed  8-bit quantities. Thx to Tod Hagan
+
 	my $package = get_package_by_element_size($size);
 	$self->_package($package);
-
 
 	my $length = ref $data ? sub { $#$data; } : sub { $data - 1 };
 	if($self->variable_length){
