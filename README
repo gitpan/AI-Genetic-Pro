@@ -4,19 +4,19 @@ NAME
 
 SYNOPSIS
         use AI::Genetic::Pro;
-        
-    sub fitness {
+    
+        sub fitness {
             my ($ga, $chromosome) = @_;
             return oct('0b' . $ga->as_string($chromosome)); 
         }
-        
-    sub terminate {
+    
+        sub terminate {
             my ($ga) = @_;
             my $result = oct('0b' . $ga->as_string($ga->getFittest));
             return $result == 4294967295 ? 1 : 0;
         }
-        
-    my $ga = AI::Genetic::Pro->new(        
+    
+        my $ga = AI::Genetic::Pro->new(        
             -fitness         => \&fitness,        # fitness function
             -terminate       => \&terminate,      # terminate function
             -type            => 'bitvector',      # type of chromosomes
@@ -31,23 +31,23 @@ SYNOPSIS
             -preserve        => 3,                # remember the bests
             -variable_length => 1,                # turn variable length ON
         );
-            
-    # init population of 32-bit vectors
+        
+        # init population of 32-bit vectors
         $ga->init(32);
-            
-    # evolve 10 generations
+        
+        # evolve 10 generations
         $ga->evolve(10);
-        
-    # best score
+    
+        # best score
         print "SCORE: ", $ga->as_value($ga->getFittest), ".\n";
-        
-    # save evolution path as a chart
+    
+        # save evolution path as a chart
         $ga->chart(-filename => 'evolution.png');
-         
-    # save state of GA
+     
+        # save state of GA
         $ga->save('genetic.sga');
-        
-    # load state of GA
+    
+        # load state of GA
         $ga->load('genetic.sga');
 
 DESCRIPTION
@@ -151,8 +151,8 @@ METHODS
                 level 0 Feature is inactive (default). Example:
 
                                 -variable_length => 0
-                                
-    # chromosomes (i.e. bitvectors)
+        
+                            # chromosomes (i.e. bitvectors)
                             0 1 0 0 1 1 0 1 1 1 0 1 0 1
                             0 0 1 1 0 1 1 1 1 0 0 1 1 0
                             0 1 1 1 0 1 0 0 1 1 0 1 1 1
@@ -163,8 +163,8 @@ METHODS
                         on the right side, Example:
 
                                 -variable_length => 1
-                                
-    # chromosomes (i.e. bitvectors)
+        
+                            # chromosomes (i.e. bitvectors)
                             0 1 0 0 1 1 0 1 1 1 
                             0 0 1 1 0 1 1 1 1
                             0 1 1 1 0 1 0 0 1 1 0 1 1 1
@@ -177,8 +177,8 @@ METHODS
                         "undef", ie.
 
                                 -variable_length => 2
-                         
-    # chromosomes (i.e. bitvectors)
+ 
+                            # chromosomes (i.e. bitvectors)
                             x x x 0 1 1 0 1 1 1 
                             x x x x 0 1 1 1 1
                             x 1 1 1 0 1 0 0 1 1 0 1 1 1
@@ -434,15 +434,15 @@ METHODS
                 [ 0, 1, 0, 1, 0, 0 ],
                 ...
             ];
-            
-    # inject
+    
+            # inject
             $ga->inject($chromosomes);
 
         If You want to delete some chromosomes form population, just
         "splice" them:
 
             my @remove = qw(1 2 3 9 12);
-            for my $idx (@remove){
+                for my $idx (sort { $b <=> $a }  @remove){
                 splice @{$ga->chromosomes}, $idx, 1;
             }
 
@@ -678,12 +678,12 @@ METHODS
         below:
 
             # -variable_length => 2, -type => 'bitvector'
-                
-    my @chromosome = $ga->as_array($chromosome)
+        
+            my @chromosome = $ga->as_array($chromosome)
             # @chromosome looks something like that
             # ( undef, undef, undef, 1, 0, 1, 1, 1, 0 )
-                
-    @chromosome = $ga->as_array_def_only($chromosome)
+        
+            @chromosome = $ga->as_array_def_only($chromosome)
             # @chromosome looks something like that
             # ( 1, 0, 1, 1, 1, 0 )
 
@@ -692,16 +692,16 @@ METHODS
         below:
 
                 # -type => 'bitvector'
-                
-        my $string = $ga->as_string($chromosome);
+        
+                my $string = $ga->as_string($chromosome);
                 # $string looks something like that
                 # 1___0___1___1___1___0 
-                
-        # or 
-                
-        # -type => 'listvector'
-                
-        $string = $ga->as_string($chromosome);
+        
+                # or 
+        
+                # -type => 'listvector'
+        
+                $string = $ga->as_string($chromosome);
                 # $string looks something like that
                 # element0___element1___element2___element3...
 
@@ -719,12 +719,12 @@ METHODS
         example below:
 
                 # -variable_length => 2, -type => 'bitvector'
-                
-        my $string = $ga->as_string($chromosome);
+        
+                my $string = $ga->as_string($chromosome);
                 # $string looks something like that
                 #  ___ ___ ___1___1___0 
-                
-        $string = $ga->as_string_def_only($chromosome);
+        
+                $string = $ga->as_string_def_only($chromosome);
                 # $string looks something like that
                 # 1___1___0
 
@@ -749,6 +749,11 @@ REPORTING BUGS
     A small script which yields the problem will probably be of help.
 
 THANKS
+    Tod Hagan for reporting a bug (rangevector values truncated to signed
+    8-bit quantities) and supplying a patch.
+
+    Randal L. Schwartz for reporting a bug in this documentation.
+
     Maciej Misiak for reporting problems with "combination" (and a bug in a
     PMX strategy).
 

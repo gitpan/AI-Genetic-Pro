@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.342;
+$VERSION = 0.343;
 #---------------
 
 use warnings;
@@ -1377,6 +1377,8 @@ is different.
 A small script which yields the problem will probably be of help. 
 
 =head1 THANKS
+
+Tod Hagan for reporting a bug (rangevector values truncated to signed  8-bit quantities) and supplying a patch.
 
 Randal L. Schwartz for reporting a bug in this documentation.
 
