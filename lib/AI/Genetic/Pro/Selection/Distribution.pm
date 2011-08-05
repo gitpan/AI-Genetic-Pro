@@ -13,6 +13,7 @@ use Math::Random qw(
 	random_exponential
 	random_poisson
 );
+use Carp 'croak';
 #=======================================================================
 sub new { 
 	my ($class, $type, @params) = @_;
@@ -26,6 +27,8 @@ sub run {
 	my ($self, $ga) = @_;
 	
 	my ($fitness, $chromosomes) = ($ga->_fitness, $ga->chromosomes);
+	croak "You must set a number of parents to use the Distribution strategy"
+		unless defined($ga->parents);
 	my $parents = $ga->parents;
 	my @parents;
 	my $high = scalar @$chromosomes;

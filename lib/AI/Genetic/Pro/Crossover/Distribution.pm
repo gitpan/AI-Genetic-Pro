@@ -2,7 +2,6 @@ package AI::Genetic::Pro::Crossover::Distribution;
 
 use warnings;
 use strict;
-use Clone qw( clone );
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use Math::Random qw(
 	random_uniform_integer 
@@ -78,7 +77,7 @@ sub run {
 			}
 		}
 		
-		$elders[0] = clone($chromosomes->[$elders[0]]);
+		$elders[0] = $chromosome->[$elders[0]]->clone;
 		for(0..$#seq){
 			next if not $seq[$_] or $_ < $min or $_ > $max;
 			$elders[0]->[$_] = $chromosomes->[$elders[$seq[$_]]]->[$_];

@@ -2,7 +2,6 @@ package AI::Genetic::Pro::Crossover::Points;
 
 use warnings;
 use strict;
-use Clone qw( clone );
 use List::MoreUtils qw(first_index);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #=======================================================================
@@ -39,7 +38,7 @@ sub run {
 			@points = map { $min + int(rand $range) } 1..$self->{points};
 		}
 
-		@elders = map { clone($chromosomes->[$_]) } @elders;
+		@elders = map { $chromosomes->[$_]->clone } @elders;
 		
 		for my $pt(@points){
 			@elders = sort {

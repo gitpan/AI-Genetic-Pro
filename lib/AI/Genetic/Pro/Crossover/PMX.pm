@@ -2,7 +2,6 @@ package AI::Genetic::Pro::Crossover::PMX;
 
 use warnings;
 use strict;
-use Clone qw( clone );
 use List::MoreUtils qw(indexes);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 #=======================================================================
@@ -58,7 +57,7 @@ sub run {
 					
 					0;
 						} map { 
-							clone($chromosomes->[$_])
+							$chromosomes->[$_]->clone
 								} @elders;
 		
 		

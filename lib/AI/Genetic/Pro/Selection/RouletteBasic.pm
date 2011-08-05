@@ -5,6 +5,7 @@ use strict;
 use List::Util qw(min);
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use List::MoreUtils qw(first_index);
+use Carp 'croak';
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }
 #=======================================================================
@@ -12,6 +13,8 @@ sub run {
 	my ($self, $ga) = @_;
 	
 	my ($fitness, $chromosomes) = ($ga->_fitness, $ga->chromosomes);
+	croak "You must set a number of parents to use the RouletteBasic strategy"
+		unless defined($ga->parents);
 	my $parents = $ga->parents;
 	my (@parents, @wheel);
 	my $const = min values %$fitness;

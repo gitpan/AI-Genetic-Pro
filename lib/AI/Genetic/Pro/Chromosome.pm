@@ -72,5 +72,13 @@ sub new_from_data {
 	
 	return bless \@genes, $class;
 }
+
+sub clone
+{
+	my ($self) = @_;
+	my $genes = tied(@{$self})->make_clone;
+	return bless($genes);
+}
+
 #=======================================================================
 1;

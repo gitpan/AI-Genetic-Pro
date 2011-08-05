@@ -5,6 +5,8 @@ use strict;
 #use Data::Dumper; $Data::Dumper::Sortkeys = 1;
 use List::Util qw(sum min);
 use List::MoreUtils qw(first_index);
+use Carp 'croak';
+
 #=======================================================================
 sub new { bless \$_[0], $_[0]; }
 #=======================================================================
@@ -30,6 +32,11 @@ sub run {
 		push @elders, int rand($count) for 0..$add;
 	}
 	
+	croak "You must set a crossover probability to use the Roulette strategy"
+		unless defined($ga->crossover);
+	croak "You must set a number of parents to use the Roulette strategy"
+		unless defined($ga->parents);
+
 	# parents
 	for(0..$count){
 		if(rand > $ga->crossover){

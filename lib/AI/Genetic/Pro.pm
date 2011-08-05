@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.343;
+$VERSION = 0.4;
 #---------------
 
 use warnings;
@@ -55,13 +55,14 @@ sub new {
 	my %opts = map { if(ref $_){$_}else{ /^-?(.*)$/o; $1 }} @_;
 	my $self = bless \%opts, $class;
 	
-	croak(q/Type of chromosomes cannot be "combination" if "vriable length" feature is active!/)
+	croak(q/Type of chromosomes cannot be "combination" if "variable length" feature is active!/)
 		if $self->type eq q/combination/ and $self->variable_length;
+	croak(q/You must specify a crossover strategy with -strategy!/)
+		unless defined ($self->strategy);
 	croak(q/Type of chromosomes cannot be "combination" if strategy is not one of: OX, PMX!/)
 		if $self->type eq q/combination/ and ($self->strategy->[0] ne q/OX/ and $self->strategy->[0] ne q/PMX/);
-	croak(q/Strategy cannot be "/,$self->strategy->[0],q/" if "vriable length" feature is active!/ )
+	croak(q/Strategy cannot be "/,$self->strategy->[0],q/" if "variable length" feature is active!/ )
 		if ($self->strategy->[0] eq 'PMX' or $self->strategy->[0] eq 'OX') and $self->variable_length;
-		
 	
 	$self->_set_strict if $self->strict;
 	
@@ -396,6 +397,8 @@ sub _calculate_fitness_all {
 sub _select_parents {
 	my ($self) = @_;
 	unless($self->_selector){
+		croak "You must specify a selection strategy!"
+			unless defined $self->selection;
 		my @tmp = @{$self->selection};
 		my $selector = q/AI::Genetic::Pro::Selection::/ . shift @tmp;
 		$selector->require;
@@ -638,14 +641,14 @@ AI::Genetic::Pro - Efficient genetic algorithms for professional purpose.
 =head1 DESCRIPTION
 
 This module provides efficient implementation of a genetic algorithm for
-a professional purpose. It was designed to operate as fast as possible
+professional use. It was designed to operate as fast as possible
 even on very large populations and big individuals/chromosomes. C<AI::Genetic::Pro> 
 was inspired by C<AI::Genetic>, so it is in most cases compatible 
-(there are some changes). Additionaly C<AI::Genetic::Pro> isn't pure Perl solution, so it 
-B<doesn't have> limitations of its ancestor (ie. seriously slow down in case of big 
-populations ( >10000 ) or vectors with size > 33 fields).
+(there are some changes). Additionally C<AI::Genetic::Pro> isn't a pure Perl solution, so it 
+B<doesn't have> limitations of its ancestor (such as serious slow-down in the
+case of big populations ( >10000 ) or vectors with more than 33 fields).
 
-If You are looking for pure Perl solution, consider L<AI::Genetic>.
+If You are looking for a pure Perl solution, consider L<AI::Genetic>.
 
 =over 4
 
@@ -653,26 +656,24 @@ If You are looking for pure Perl solution, consider L<AI::Genetic>.
 
 To increase speed XS code is used, however with portability in 
 mind. This distribution was tested on Windows and Linux platforms 
-(should work on any other).
+(and should work on any other).
 
 =item Memory
 
-This module was designed to use as little memory as possible. Population
-of size 10000 consist 92-bit vectors uses only ~24MB (in C<AI::Genetic> 
-something about ~78MB!!!).
+This module was designed to use as little memory as possible. A population
+of size 10000 consisting of 92-bit vectors uses only ~24MB (C<AI::Genetic> 
+would use about 78MB!).
 
 =item Advanced options
 
 To provide more flexibility C<AI::Genetic::Pro> supports many 
-statistic distributions, such as: C<uniform>, C<natural>, C<chi_square>
-and others. This feature can be used in selection or/and crossover. See
-documentation below.
+statistical distributions, such as C<uniform>, C<natural>, C<chi_square>
+and others. This feature can be used in selection and/or crossover. See
+the documentation below.
 
 =back
 
 =head1 METHODS
-
-Simply description of available methods. See below.
 
 =over 4
 
@@ -720,15 +721,18 @@ Each gene of a "combination" individual/chromosome can assume one string value f
 
 =item -population
 
-This defines the size of the population, i.e. how many chromosomes to simultaneously exist at each generation.
+This defines the size of the population, i.e. how many chromosomes
+simultaneously exist at each generation.
 
 =item -crossover 
 
-This defines the crossover rate. Fairest results are achieved with crossover rate ~0.95.
+This defines the crossover rate. The fairest results are achieved with
+crossover rate ~0.95.
 
 =item -mutation 
 
-This defines the mutation rate. Fairest results are achieved with mutation rate ~0.01.
+This defines the mutation rate. The fairest results are achieved with mutation
+rate ~0.01.
 
 =item -preserve
 
@@ -739,11 +743,12 @@ This defines injection of the bests chromosomes into a next generation. It cause
     -preserve => 9, # 9 chromosomes will be preserved
     # and so on...
 
-Attention! You cannot preserve more chromosomes, than Your population consists.
+Attention! You cannot preserve more chromosomes than exist in your population.
 
 =item -variable_length
 
-This defines if variable-length chromosomes are turned on (default off) and a type of allowed mutations. See below.
+This defines whether variable-length chromosomes are turned on (default off)
+and a which types of mutation are allowed. See below.
 
 =over 8
 
@@ -798,7 +803,7 @@ instead of C<as_array> and C<as_string>.
 
 =item -parents  
 
-This defines how many parents should be used in a corssover.
+This defines how many parents should be used in a crossover.
 
 =item -selection
 
@@ -812,17 +817,18 @@ where type is one of:
 
 =item B<RouletteBasic>
 
-Each individual/chromosome can be selected with probability poportionaly to its fitness.
+Each individual/chromosome can be selected with probability proportional to its fitness.
 
 =item B<Roulette>
 
-At the first best individuals/chromosomes are selected. From this collection
-parents are selected with probability poportionaly to its fitness.
+First the best individuals/chromosomes are selected. From this collection
+parents are selected with probability poportional to their fitness.
 
 =item B<RouletteDistribution>
 
-Each individual/chromosome has portion of roulette wheel proportionaly to its fitness. Selection is done with
-specified distribution. Supported distributions and paremeters are listed below.
+Each individual/chromosome has a portion of roulette wheel proportional to its
+fitness. Selection is done with the specified distribution. Supported
+distributions and parameters are listed below.
 
 =over 12
 
@@ -909,7 +915,8 @@ Poisson distribution, where C<$mu> is mean. C<$mu> by default is set to size of 
 
 =item -strategy 
 
-This defines strategy of crossover operation. It expects an array reference listed below:
+This defines the astrategy of crossover operation. It expects an array
+reference listed below:
 
     -strategy => [ $type, @params ]
 
@@ -919,23 +926,26 @@ where type is one of:
 
 =item PointsSimple
 
-Simple crossover in one or many points. Best chromosomes/individuals are selected to new generation. In example:
+Simple crossover in one or many points. The best chromosomes/individuals are
+selected for the new generation. For example:
 
     -strategy => [ 'PointsSimple', $n ]
 
-where C<$n> is number of points for crossing.
+where C<$n> is the number of points for crossing.
 
 =item PointsBasic
 
-Crossover in one or many points. In basic crossover selected parents are crossed and one (random) of children is moved to new generation. In example:
+Crossover in one or many points. In basic crossover selected parents are
+crossed and one (randomly-chosen) child is moved to the new generation. For
+example:
 
     -strategy => [ 'PointsBasic', $n ]
 
-where C<$n> is number of points for crossing.
+where C<$n> is the number of points for crossing.
 
 =item Points
 
-Crossover in one or many points. In normal crossover selected parents are crossed and the best of child is moved to new generation. In example:
+Crossover in one or many points. In normal crossover selected parents are crossed and the best child is moved to the new generation. For example:
 
     -strategy => [ 'Points', $n ]
 
@@ -943,15 +953,18 @@ where C<$n> is number of points for crossing.
 
 =item PointsAdvenced
 
-Crossover in one or many points. After crossover best chromosomes/individuals from all parents and chidren are selected to new generation. In example:
+Crossover in one or many points. After crossover the best
+chromosomes/individuals from all parents and chidren are selected for the  new
+generation. For example:
 
     -strategy => [ 'PointsAdvanced', $n ]
 
-where C<$n> is number of points for crossing.
+where C<$n> is the number of points for crossing.
 
 =item Distribution
 
-In I<distribution> crossover parents are crossed in points selected with specified distribution. See below.
+In I<distribution> crossover parents are crossed in points selected with the
+specified distribution. See below.
 
 =over 8
 
@@ -979,7 +992,7 @@ Binomial distribution. No additional parameters are needed.
 
 =item C<-strategy =E<gt> [ 'Distribution', 'chi_square', $df ]>
 
-Chi-square distribution with C<$df> degrees of freedom. C<$df> by default is set to the number of parents.
+Chi-squared distribution with C<$df> degrees of freedom. C<$df> by default is set to the number of parents.
 
 =item C<-strategy =E<gt> [ 'Distribution', 'exponential', $av ]>
 
@@ -1003,25 +1016,24 @@ OX method defined by Davis (?) in 1985. Parameters: I<none>.
 
 =item -cache    
 
-This defines if cache should be used. Correct values are: 1 or 0 (default: I<0>).
+This defines whether a cache should be used. Allowed values are 1 or 0
+(default: I<0>).
 
 =item -history 
 
-This defines if history should be collected. Correct values are: 1 or 0 (default: I<0>).
-
-Collect history.
+This defines whether history should be collected. Allowed values are 1 or 0 (default: I<0>).
 
 =item -strict
 
-This defined if check for modifing chromosomes in a fitness (user defined) 
-function is active. Direct modifing chromosomes is not allowed and it is 
-a highway to big troubles. This mode should be used only for testing, becouse it is B<slow>.
+This defines if the check for modifying chromosomes in a user-defined fitness
+function is active. Directly modifying chromosomes is not allowed and it is 
+a highway to big trouble. This mode should be used only for testing, because it is B<slow>.
 
 =back
 
 =item I<$ga>-E<gt>B<inject>($chromosomes)
 
-Inject new, user defined, chromosomes into a current population. See example below:
+Inject new, user defined, chromosomes into the current population. See example below:
 
     # example for bitvector
     my $chromosomes = [
@@ -1034,7 +1046,7 @@ Inject new, user defined, chromosomes into a current population. See example bel
     # inject
     $ga->inject($chromosomes);
 
-If You want to delete some chromosomes form population, just C<splice> them:
+If You want to delete some chromosomes from population, just C<splice> them:
 
     my @remove = qw(1 2 3 9 12);
 	for my $idx (sort { $b <=> $a }  @remove){
@@ -1065,7 +1077,9 @@ Chromosomes will be lists of values from specified range. See documentation of C
 
 =item C<combination>
 
-Chromosomes will be uniq lists of specified values. This is used for example in I<Traveling Salesman Problem>. See documentation of C<new> method.
+Chromosomes will be unique lists of specified values. This is used for example
+in the I<Traveling Salesman Problem>. See the documentation of the C<new>
+method.
 
 =back
 
@@ -1141,7 +1155,9 @@ For combination, the argument is an anonymous list of possible values of gene.
 
     $ga->init( [ 'a', 'b', 'c' ] );
 
-This initializes a population where each chromosome has 3 genes and each gene is uniq combination of 'a', 'b' and 'c'. For example genes looks something like that:
+This initializes a population where each chromosome has 3 genes and each gene
+is a unique combination of 'a', 'b' and 'c'. For example genes looks something
+like that:
 
     [ 'a', 'b', 'c' ]    # gene 1
     [ 'c', 'a', 'b' ]    # gene 2
@@ -1152,7 +1168,9 @@ This initializes a population where each chromosome has 3 genes and each gene is
 
 =item I<$ga>-E<gt>B<evolve>($n)
 
-This method causes the GA to evolve the population for the specified number of generations. If its argument is 0 or C<undef> GA will evolve the population to infinity unless terminate function is specified.
+This method causes the GA to evolve the population for the specified number of
+generations. If its argument is 0 or C<undef> GA will evolve the population to
+infinity unless a C<terminate> function is specified.
 
 =item I<$ga>-E<gt>B<getHistory>()
 
@@ -1173,9 +1191,9 @@ Get I<max>, I<mean> and I<min> score of the current generation. In example:
 
 =item I<$ga>-E<gt>B<getFittest>($n, $unique)
 
-This function returns list of fittests chromosomes from the current population. 
-You can specify: how many chromosomes should be returned and if returned 
-chromosomes should be unique. See example below.
+This function returns a list of the fittest chromosomes from the current
+population.  You can specify how many chromosomes should be returned and if
+the returned chromosomes should be unique. See example below.
 
     # only one - the best
     my ($best) = $ga->getFittest;
@@ -1186,17 +1204,17 @@ chromosomes should be unique. See example below.
     # or 7 bests and UNIQUE chromosomes
     my @bests = $ga->getFittest(7, 1);
 
-If You want to get a big number of chromosomes, try to use C<getFittest_as_arrayref>
-function instead (for efficiency).
+If you want to get a large number of chromosomes, try to use the
+C<getFittest_as_arrayref> function instead (for efficiency).
 
 =item I<$ga>-E<gt>B<getFittest_as_arrayref>($n, $unique)
 
-This function is very similar to C<getFittest>, but it returns reference 
+This function is very similar to C<getFittest>, but it returns a reference 
 to an array instead of a list. 
 
 =item I<$ga>-E<gt>B<generation>()
 
-Get number of generation.
+Get the number of the current generation.
 
 =item I<$ga>-E<gt>B<people>()
 
@@ -1211,8 +1229,8 @@ Alias for C<people>.
 
 =item I<$ga>-E<gt>B<chart>(%options)
 
-Generate a chart describing changes of min, mean, max scores in Your
-population. To satisfy Your needs, You can pass following options:
+Generate a chart describing changes of min, mean, and max scores in your
+population. To satisfy your needs, you can pass the following options:
 
 =over 4
 
@@ -1258,13 +1276,13 @@ Height of a chart (default: I<480>).
 
 =item -font
 
-Path to font in (*.ttf format) to be used (default: none).
+Path to font (in *.ttf format) to be used (default: none).
 
 =item -logo
 
 Path to logo (png/jpg image) to embed in a chart (default: none).
 
-=item In example:
+=item For example:
 
 	$ga->chart(-width => 480, height => 320, -filename => 'chart.png');
 
@@ -1272,25 +1290,25 @@ Path to logo (png/jpg image) to embed in a chart (default: none).
 
 =item I<$ga>-E<gt>B<save>($file)
 
-Save current state of the genetic algorithm to a specified file.
+Save the current state of the genetic algorithm to the specified file.
 
 =item I<$ga>-E<gt>B<load>($file)
 
-Load a state of the genetic algorithm from a specified file. 
+Load a state of the genetic algorithm from the specified file. 
 
 =item I<$ga>-E<gt>B<as_array>($chromosome)
 
-In an array context return an array representing specified chromosome. 
-In a scalar context return an reference to an array representing specified 
+In list context return an array representing the specified chromosome. 
+In scalar context return an reference to an array representing the specified 
 chromosome. If I<variable_length> is turned on and is set to level 2, an array 
 can have some C<undef> values. To get only C<not undef> values use 
 C<as_array_def_only> instead of C<as_array>.
 
 =item I<$ga>-E<gt>B<as_array_def_only>($chromosome)
 
-In an array context return an array representing specified chromosome. 
-In a scalar context return an reference to an array representing specified 
-chromosome. If I<variable_length> is turned off, this function is just 
+In list context return an array representing the specified chromosome. 
+In scalar context return an reference to an array representing the specified 
+chromosome. If I<variable_length> is turned off, this function is just an
 alias for C<as_array>. If I<variable_length> is turned on and is set to 
 level 2, this function will return only C<not undef> values from chromosome. 
 See example below:
@@ -1307,7 +1325,7 @@ See example below:
 
 =item I<$ga>-E<gt>B<as_string>($chromosome)
 
-Return string-representation of specified chromosome. See example below:
+Return a string representation of the specified chromosome. See example below:
 
 	# -type => 'bitvector'
 	
@@ -1324,15 +1342,15 @@ Return string-representation of specified chromosome. See example below:
 	# element0___element1___element2___element3...
 
 Attention! If I<variable_length> is turned on and is set to level 2, it is 
-possible to get C<undef> values on the left side of the vector. In returned
-string C<undef> values will be replaced with B<spaces>. If You don't want
+possible to get C<undef> values on the left side of the vector. In the returned
+string C<undef> values will be replaced with B<spaces>. If you don't want
 to see any I<spaces>, use C<as_string_def_only> instead of C<as_string>.
 
 =item I<$ga>-E<gt>B<as_string_def_only>($chromosome)
 
-Return string-representation of specified chromosome. If I<variable_length> 
+Return a string representation of specified chromosome. If I<variable_length> 
 is turned off, this function is just alias for C<as_string>. If I<variable_length> 
-is turned on and is set to level 2, this function will return string without
+is turned on and is set to level 2, this function will return a string without
 C<undef> values. See example below:
 
 	# -variable_length => 2, -type => 'bitvector'
@@ -1347,14 +1365,15 @@ C<undef> values. See example below:
 
 =item I<$ga>-E<gt>B<as_value>($chromosome)
 
-Return score of specified chromosome. Value of I<chromosome> is 
-calculated by fitness function.
+Return the score of the specified chromosome. The value of I<chromosome> is 
+calculated by the fitness function.
 
 =back
 
 =head1 SUPPORT
 
-C<AI::Genetic::Pro> is still under development, however it is used in many production environments.
+C<AI::Genetic::Pro> is still under development; however, it is used in many
+production environments.
 
 =head1 TODO
 
@@ -1364,7 +1383,7 @@ C<AI::Genetic::Pro> is still under development, however it is used in many produ
 
 =item More tests.
 
-=item Warnings in case of incorrect parameters.
+=item More warnings about incorrect parameters.
 
 =back
 
@@ -1377,6 +1396,10 @@ is different.
 A small script which yields the problem will probably be of help. 
 
 =head1 THANKS
+
+Miles Gould for suggestions and some fixes (even in this documentation! :-).
+
+Alun Jones for fixing memory leaks.
 
 Tod Hagan for reporting a bug (rangevector values truncated to signed  8-bit quantities) and supplying a patch.
 
