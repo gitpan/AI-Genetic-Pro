@@ -2,7 +2,7 @@ package AI::Genetic::Pro;
 
 use vars qw($VERSION);
 
-$VERSION = 0.4;
+$VERSION = 0.401;
 #---------------
 
 use warnings;
@@ -1415,7 +1415,7 @@ Alec Chen for reporting some bugs.
 
 =head1 AUTHOR
 
-Strzelecki Lukasz <strzelec@rswsystems.com>
+Strzelecki Lukasz <lukasz@strzeleccy.eu>
 
 =head1 SEE ALSO
 
